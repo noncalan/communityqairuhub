@@ -23,7 +23,28 @@ export const authService = {
   },
 
   async updatePassword(password: string) {
-    return createClient().auth.updateUser({ password });
+    try {
+      const response = await fetch("/auth/recovery", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const body = (await response.json()) as {
+        error?: { code?: string };
+      };
+      return {
+        error: response.ok
+          ? null
+          : { code: body.error?.code ?? "unexpected_failure" },
+      };
+    } catch {
+      return {
+        error: {
+          code: "network_error",
+          name: "AuthRetryableFetchError",
+        },
+      };
+    }
   },
 
   async endRecoverySession() {

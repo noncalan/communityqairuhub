@@ -39,7 +39,8 @@ export function authErrorMessage(error: unknown, context: AuthContext) {
   if (
     code === "session_not_found" ||
     code === "session_expired" ||
-    code === "refresh_token_not_found"
+    code === "refresh_token_not_found" ||
+    code === "invalid_recovery_session"
   ) {
     return "This password reset session has expired. Request a new reset link.";
   }
