@@ -1,0 +1,2 @@
+import { SearchableDirectory } from "@/components/catalog/searchable-directory"; import { EventDialog } from "@/components/demo/create-dialogs"; import { PageHeading } from "@/components/shared/page-heading";
+export default function Page(){return <div className="page-container"><PageHeading eyebrow="Campus calendar" title="Events" description="Workshops, meetups and the first traditions bringing QAIRU’s founding cohort together." action={<EventDialog/>}/><SearchableDirectory type="events"/></div>}

@@ -1,0 +1,1 @@
+import { Suspense } from "react";import { ResourcesPage } from "@/components/demo/resources-page";export default function Page(){return <Suspense fallback={<div className="page-container">Loading resources…</div>}><ResourcesPage/></Suspense>}

@@ -1,0 +1,2 @@
+import { SearchableDirectory } from "@/components/catalog/searchable-directory"; import { ProjectDialog } from "@/components/demo/create-dialogs"; import { PageHeading } from "@/components/shared/page-heading";
+export default function Page(){return <div className="page-container"><PageHeading eyebrow="Build together" title="Student projects" description="Follow the first ideas being built at QAIRU, contribute your skills or publish your own." action={<ProjectDialog/>}/><SearchableDirectory type="projects"/></div>}

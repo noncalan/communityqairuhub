@@ -1,0 +1,2 @@
+import { SearchableDirectory } from "@/components/catalog/searchable-directory"; import { CommunityDialog } from "@/components/demo/create-dialogs"; import { PageHeading } from "@/components/shared/page-heading";
+export default function Page(){return <div className="page-container"><PageHeading eyebrow="Student-led spaces" title="Communities" description="Join founding groups, share early work and help shape QAIRU traditions." action={<CommunityDialog/>}/><SearchableDirectory type="communities"/></div>}
