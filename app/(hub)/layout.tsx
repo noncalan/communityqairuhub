@@ -13,7 +13,7 @@ export default async function HubLayout({ children }: { children: React.ReactNod
   if (!profile?.onboardingCompleted) redirect("/onboarding");
   const counts = await getActivityCounts(supabase);
   return (
-    <CurrentUserProvider initialProfile={profile}>
+    <CurrentUserProvider key={userId} initialProfile={profile}>
       <LiveActivityProvider
         userId={userId}
         initialMessageUnreadCount={counts.messages}

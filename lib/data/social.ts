@@ -248,7 +248,8 @@ export async function listCommunities(client: Client, currentUserId: string) {
   const { data, error } = await client
     .from("communities")
     .select(communityListSelect)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(100);
   if (error) throw error;
   return (data as unknown as CommunityQueryRow[]).map((row) =>
     mapCommunity(row, currentUserId),
@@ -413,7 +414,8 @@ export async function listProjects(client: Client, currentUserId: string) {
   const { data, error } = await client
     .from("projects")
     .select(projectListSelect)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(100);
   if (error) throw error;
   return (data as unknown as ProjectBaseRow[]).map((row) => ({
     ...mapProjectBase(row, currentUserId),
@@ -454,7 +456,8 @@ export async function getProjectBySlug(
     .from("project_applications")
     .select("id, applicant_id, project_role_id, message, status, created_at")
     .eq("project_id", row.id)
-    .order("created_at");
+    .order("created_at")
+    .limit(100);
   if (applicationError) throw applicationError;
   const applications = (applicationData ?? []) as ApplicationRow[];
   const applicantProfiles = await getProfilesByIds(
@@ -635,7 +638,8 @@ export async function listEvents(client: Client, currentUserId: string) {
   const { data, error } = await client
     .from("events")
     .select(eventListSelect)
-    .order("starts_at");
+    .order("starts_at")
+    .limit(100);
   if (error) throw error;
   return (data as unknown as EventQueryRow[]).map((row) =>
     mapEvent(row, currentUserId),

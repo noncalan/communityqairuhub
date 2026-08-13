@@ -42,12 +42,12 @@ function authErrorMessage(message: string) {
     return "Confirm your email before signing in.";
   }
   if (/user already registered/i.test(message)) {
-    return "An account with this email already exists.";
+    return "Authentication could not be completed. Try signing in or resetting your password.";
   }
   if (/rate limit/i.test(message)) {
     return "Too many attempts. Please wait a moment and try again.";
   }
-  return message;
+  return "Authentication could not be completed. Please try again.";
 }
 
 export function AuthForm({ mode }: { mode: Mode }) {

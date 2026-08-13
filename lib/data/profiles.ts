@@ -70,9 +70,9 @@ export async function getProfileReferences(
   client: Client,
 ): Promise<ProfileReferences> {
   const [programs, interests, skills] = await Promise.all([
-    client.from("programs").select("id, name").order("name"),
-    client.from("interests").select("id, name").order("name"),
-    client.from("skills").select("id, name").order("name"),
+    client.from("programs").select("id, name").order("name").limit(250),
+    client.from("interests").select("id, name").order("name").limit(250),
+    client.from("skills").select("id, name").order("name").limit(250),
   ]);
   const error = programs.error ?? interests.error ?? skills.error;
   if (error) throw error;
@@ -123,7 +123,8 @@ export async function listCompletedProfiles(client: Client) {
     .select(profileSelect)
     .eq("onboarding_completed", true)
     .eq("profile_visibility", "campus")
-    .order("full_name");
+    .order("full_name")
+    .limit(200);
   if (error) throw error;
   return (data as ProfileQueryRow[]).map(mapProfile);
 }
@@ -147,60 +148,20 @@ export async function saveProfile(
   input: ProfileMutationInput,
   completeOnboarding: boolean,
 ) {
-  const profile = {
-    id: userId,
-    username: input.username,
-    full_name: input.fullName,
-    bio: input.bio,
-    program_id: input.programId,
-    academic_year: input.academicYear,
-    available_for_projects: input.availableForProjects,
-    open_to_collaboration: input.openToCollaboration,
+  const { error } = await client.rpc("save_my_profile", {
+    profile_username: input.username,
+    profile_full_name: input.fullName,
+    profile_bio: input.bio,
+    profile_program_id: input.programId,
+    profile_academic_year: input.academicYear,
+    profile_available_for_projects: input.availableForProjects,
+    profile_open_to_collaboration: input.openToCollaboration,
     profile_visibility: input.profileVisibility,
-    onboarding_completed: false,
-  };
-  const { error: profileError } = await client
-    .from("profiles")
-    .upsert(profile, { onConflict: "id" });
-  if (profileError) throw profileError;
-
-  const [deleteInterests, deleteSkills] = await Promise.all([
-    client.from("profile_interests").delete().eq("profile_id", userId),
-    client.from("profile_skills").delete().eq("profile_id", userId),
-  ]);
-  if (deleteInterests.error) throw deleteInterests.error;
-  if (deleteSkills.error) throw deleteSkills.error;
-
-  const writes = [];
-  if (input.interestIds.length) {
-    writes.push(
-      client.from("profile_interests").insert(
-        input.interestIds.map((interestId) => ({
-          profile_id: userId,
-          interest_id: interestId,
-        })),
-      ),
-    );
-  }
-  if (input.skillIds.length) {
-    writes.push(
-      client.from("profile_skills").insert(
-        input.skillIds.map((skillId) => ({
-          profile_id: userId,
-          skill_id: skillId,
-        })),
-      ),
-    );
-  }
-  const writeResults = await Promise.all(writes);
-  const writeError = writeResults.find((result) => result.error)?.error;
-  if (writeError) throw writeError;
-
-  const { error: completionError } = await client
-    .from("profiles")
-    .update({ onboarding_completed: completeOnboarding })
-    .eq("id", userId);
-  if (completionError) throw completionError;
+    profile_onboarding_completed: completeOnboarding,
+    interest_ids: input.interestIds,
+    skill_ids: input.skillIds,
+  });
+  if (error) throw error;
 
   return getProfileById(client, userId);
 }

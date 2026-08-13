@@ -34,8 +34,17 @@ function uuid(value: string, label: string) {
   return value;
 }
 
-function uniqueList(values: string[], min: number, max: number, label: string) {
+function uniqueList(
+  values: string[],
+  min: number,
+  max: number,
+  label: string,
+  maximumItems = 20,
+) {
   const result = [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+  if (result.length > maximumItems) {
+    throw new Error(`${label} supports at most ${maximumItems} items.`);
+  }
   if (result.some((value) => value.length < min || value.length > max)) {
     throw new Error(`${label} must each be between ${min} and ${max} characters.`);
   }
@@ -49,6 +58,7 @@ function databaseMessage(error: unknown) {
   const message = "message" in error ? String(error.message) : "";
   if (message.includes("Event is at capacity")) return "This event has reached capacity.";
   if (message.includes("community owner cannot leave")) return "Transfer ownership before leaving this community.";
+  if (message.includes("Rate limit exceeded")) return "Too many changes. Please wait and try again.";
   if (code === "23505" && message.includes("project_applications")) return "You already have a pending application for this project.";
   if (code === "23505" && message.includes("slug")) return "An item with this name already exists. Try a more specific name.";
   if (code === "23505") return "That action has already been completed.";

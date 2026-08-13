@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getProfileById } from "@/lib/data/profiles";
+import { safeInternalPath } from "@/lib/security/redirects";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const requestedNext = url.searchParams.get("next");
-  const next =
-    requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
-      ? requestedNext
-      : null;
+  const next = safeInternalPath(url.searchParams.get("next"), url.origin);
 
   if (!code) {
     return NextResponse.redirect(

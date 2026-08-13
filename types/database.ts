@@ -1212,6 +1212,22 @@ export type Database = {
         Args: { target_conversation_id: string }
         Returns: string
       }
+      save_my_profile: {
+        Args: {
+          interest_ids: string[]
+          profile_academic_year: number
+          profile_available_for_projects: boolean
+          profile_bio: string
+          profile_full_name: string
+          profile_onboarding_completed: boolean
+          profile_open_to_collaboration: boolean
+          profile_program_id: string
+          profile_username: string
+          profile_visibility: string
+          skill_ids: string[]
+        }
+        Returns: Database["public"]["Tables"]["profiles"]["Row"]
+      }
       send_message: {
         Args: { message_body: string; target_conversation_id: string }
         Returns: {

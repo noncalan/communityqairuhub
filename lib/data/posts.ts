@@ -233,7 +233,8 @@ export async function listPostComments(client: Client, postId: string) {
     .from("comments")
     .select(commentSelect)
     .eq("post_id", postId)
-    .order("created_at");
+    .order("created_at")
+    .limit(100);
   if (error) throw error;
   return (data as unknown as CommentRow[]).map(mapComment);
 }

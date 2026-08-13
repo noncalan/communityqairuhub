@@ -190,7 +190,7 @@ export function LiveResourceDetail({ resource }: { resource: LiveResource }) {
         <aside className="space-y-4">
           <section className="surface rounded-lg p-5"><p className="eyebrow">Shared by</p><Link href={`/u/${resource.author.username}`} className="mt-3 block text-sm font-semibold hover:text-primary">{resource.author.fullName}</Link><p className="mt-1 text-xs text-muted-foreground">@{resource.author.username}</p></section>
           <ResourceSaveButton resourceId={resource.id} initialSaved={resource.isSaved} initialCount={resource.saveCount} showCount={false} />
-          {resource.externalUrl && <Button asChild className="w-full"><a href={resource.externalUrl} target="_blank" rel="noreferrer">Open source<ArrowUpRight className="size-4" /></a></Button>}
+          {resource.externalUrl && <Button asChild className="w-full"><a href={resource.externalUrl} target="_blank" rel="noopener noreferrer">Open source<ArrowUpRight className="size-4" /></a></Button>}
         </aside>
       </div>
     </div>

@@ -3,6 +3,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
+// A fresh CSP nonce is forwarded by proxy.ts on every request. Nonces can only
+// be attached to framework scripts during dynamic rendering.
+export const dynamic = "force-dynamic";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
