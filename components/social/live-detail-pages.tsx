@@ -14,12 +14,14 @@ import {
   setProjectSavedAction,
 } from "@/app/actions/social";
 import { AvatarMark } from "@/components/shared/avatar-mark";
+import { LivePostFeed } from "@/components/posts/live-post-feed";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { CompactProfile, LiveCommunity, LiveEvent, LiveProject } from "@/lib/data/social";
+import type { LivePost } from "@/lib/data/posts";
 import { cn } from "@/lib/utils";
 
 function initials(profile: CompactProfile) {
@@ -43,7 +45,7 @@ function PhaseEmpty({ children }: { children: React.ReactNode }) {
   return <div className="surface mt-4 rounded-lg border-dashed p-10 text-center text-sm text-muted-foreground">{children}</div>;
 }
 
-export function LiveCommunityDetail({ community }: { community: LiveCommunity }) {
+export function LiveCommunityDetail({ community, posts, currentUserId }: { community: LiveCommunity; posts: LivePost[]; currentUserId: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [role, setRole] = useState(community.currentRole);
@@ -85,7 +87,7 @@ export function LiveCommunityDetail({ community }: { community: LiveCommunity })
         <Tabs defaultValue="members" className="mt-8">
           <TabsList><TabsTrigger value="members">Members</TabsTrigger><TabsTrigger value="posts">Posts</TabsTrigger><TabsTrigger value="events">Events</TabsTrigger><TabsTrigger value="resources">Resources</TabsTrigger></TabsList>
           <TabsContent value="members" className="mt-4 grid gap-3 sm:grid-cols-2">{community.members.map((member) => <Link key={member.profile.id} href={`/u/${member.profile.username}`} className="surface flex items-center gap-3 rounded-lg p-4"><AvatarMark initials={initials(member.profile)} color="#4f5fc4" className="size-9" /><span className="min-w-0 flex-1 truncate text-sm font-medium">{member.profile.fullName}</span><Badge variant="outline" className="capitalize">{member.role}</Badge></Link>)}</TabsContent>
-          <TabsContent value="posts"><PhaseEmpty>Community posts are intentionally still demo-only in Phase 2B-1.</PhaseEmpty></TabsContent>
+          <TabsContent value="posts" className="mt-4"><LivePostFeed initialPosts={posts} communities={[{ id: community.id, slug: community.slug, name: community.name }]} currentUserId={currentUserId} fixedCommunityId={community.id} canPost={role !== null} heading={`${community.name} posts`} emptyTitle="No community posts yet" emptyDescription={role ? "Publish the first update for this community." : "Join this community to publish its first update."} /></TabsContent>
           <TabsContent value="events"><PhaseEmpty>Community-specific events will be connected in a later phase.</PhaseEmpty></TabsContent>
           <TabsContent value="resources"><PhaseEmpty>Community resources remain demo-only and no fictional records are shown here.</PhaseEmpty></TabsContent>
         </Tabs>

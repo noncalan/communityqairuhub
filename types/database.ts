@@ -14,6 +14,52 @@ export type Database = {
   }
   public: {
     Tables: {
+      comments: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          post_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          post_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "post_feed_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communities: {
         Row: {
           category: string
@@ -263,6 +309,131 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      post_bookmarks: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_bookmarks_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "post_feed_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_bookmarks_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_bookmarks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_likes: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "post_feed_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          author_id: string
+          community_id: string | null
+          content: string
+          created_at: string
+          id: string
+          tags: string[]
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          community_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          tags?: string[]
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          community_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          tags?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profile_interests: {
         Row: {
@@ -627,6 +798,96 @@ export type Database = {
           },
         ]
       }
+      resource_saves: {
+        Row: {
+          created_at: string
+          resource_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          resource_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          resource_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_saves_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resource_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resource_saves_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resource_saves_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resources: {
+        Row: {
+          author_id: string
+          category: string
+          created_at: string
+          description: string
+          external_url: string | null
+          id: string
+          storage_object_path: string | null
+          tags: string[]
+          title: string
+          type: Database["public"]["Enums"]["resource_type"]
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          category: string
+          created_at?: string
+          description: string
+          external_url?: string | null
+          id?: string
+          storage_object_path?: string | null
+          tags?: string[]
+          title: string
+          type: Database["public"]["Enums"]["resource_type"]
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          category?: string
+          created_at?: string
+          description?: string
+          external_url?: string | null
+          id?: string
+          storage_object_path?: string | null
+          tags?: string[]
+          title?: string
+          type?: Database["public"]["Enums"]["resource_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resources_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       skills: {
         Row: {
           created_at: string
@@ -665,7 +926,71 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      post_feed_items: {
+        Row: {
+          author_avatar_url: string | null
+          author_full_name: string | null
+          author_id: string | null
+          author_username: string | null
+          bookmarked_by_current_user: boolean | null
+          comment_count: number | null
+          community_id: string | null
+          community_name: string | null
+          community_slug: string | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          like_count: number | null
+          liked_by_current_user: boolean | null
+          tags: string[] | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resource_items: {
+        Row: {
+          author_avatar_url: string | null
+          author_full_name: string | null
+          author_id: string | null
+          author_username: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          external_url: string | null
+          id: string | null
+          save_count: number | null
+          saved_by_current_user: boolean | null
+          storage_object_path: string | null
+          tags: string[] | null
+          title: string | null
+          type: Database["public"]["Enums"]["resource_type"] | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resources_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       create_project: {
@@ -688,6 +1013,7 @@ export type Database = {
       community_member_role: "owner" | "moderator" | "member"
       community_status: "forming" | "active"
       project_status: "idea" | "building" | "launched" | "completed"
+      resource_type: "guide" | "notes" | "repository" | "link" | "document"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -820,6 +1146,7 @@ export const Constants = {
       community_member_role: ["owner", "moderator", "member"],
       community_status: ["forming", "active"],
       project_status: ["idea", "building", "launched", "completed"],
+      resource_type: ["guide", "notes", "repository", "link", "document"],
     },
   },
 } as const
