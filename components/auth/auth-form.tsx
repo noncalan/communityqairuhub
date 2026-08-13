@@ -1,13 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { authService } from "@/lib/auth/service";
 import { isLiveMode } from "@/lib/app-mode";
+import { authErrorMessage } from "@/lib/auth/auth-errors";
+import {
+  PASSWORD_REQUIREMENTS,
+  PASSWORD_REQUIREMENT_SUMMARY,
+  validatePassword,
+} from "@/lib/auth/password-policy";
+import { authService } from "@/lib/auth/service";
+import { safeInternalPath } from "@/lib/security/redirects";
+import { getTrustedSiteOrigin } from "@/lib/security/site-origin";
 
 type Mode = "sign-in" | "sign-up" | "forgot" | "reset";
 
@@ -29,51 +36,69 @@ const copy = {
   },
   reset: {
     title: "Choose a new password",
-    desc: "Use at least eight characters.",
+    desc: "Set a strong password, then sign in again deliberately.",
     submit: "Update password",
   },
 } satisfies Record<Mode, { title: string; desc: string; submit: string }>;
 
-function authErrorMessage(message: string) {
-  if (/invalid login credentials/i.test(message)) {
-    return "Email or password is incorrect.";
-  }
-  if (/email not confirmed/i.test(message)) {
-    return "Confirm your email before signing in.";
-  }
-  if (/user already registered/i.test(message)) {
-    return "Authentication could not be completed. Try signing in or resetting your password.";
-  }
-  if (/rate limit/i.test(message)) {
-    return "Too many attempts. Please wait a moment and try again.";
-  }
-  return "Authentication could not be completed. Please try again.";
-}
-
-export function AuthForm({ mode }: { mode: Mode }) {
+export function AuthForm({
+  mode,
+  initialMessage = "",
+}: {
+  mode: Mode;
+  initialMessage?: string;
+}) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [sentTo, setSentTo] = useState("");
+  const queryError = searchParams.get("error");
+  const queryErrorMessage =
+    queryError === "recovery_session_expired" ||
+    queryError === "invalid_recovery_session"
+      ? "This password reset session is not valid. Request a new reset link."
+      : queryError === "confirmation_failed"
+        ? "The confirmation link is invalid or expired. Request a new link and try again."
+        : queryError === "missing_confirmation_code"
+          ? "The confirmation link is incomplete. Request a new link and try again."
+          : "";
+  const [formError, setFormError] = useState(
+    initialMessage || queryErrorMessage,
+  );
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  const [resetSucceeded, setResetSucceeded] = useState(false);
   const content = copy[mode];
+  const statusMessage =
+    mode === "sign-in" && searchParams.get("reset") === "success"
+      ? "Password updated successfully. Sign in with your new password."
+      : "";
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setFormError("");
+    setPasswordErrors([]);
+
     const form = new FormData(event.currentTarget);
     const email = String(form.get("email") ?? "").trim().toLowerCase();
     const password = String(form.get("password") ?? "");
     const confirmPassword = String(form.get("confirmPassword") ?? "");
 
     if (mode !== "reset" && !/^\S+@\S+\.\S+$/.test(email)) {
-      toast.error("Enter a valid email address.");
+      setFormError("Enter a valid email address.");
       return;
     }
-    if ((mode === "sign-in" || mode === "sign-up" || mode === "reset") && password.length < 8) {
-      toast.error("Password must contain at least 8 characters.");
-      return;
-    }
-    if ((mode === "sign-up" || mode === "reset") && password !== confirmPassword) {
-      toast.error("Passwords do not match.");
-      return;
+
+    if (mode === "sign-up" || mode === "reset") {
+      const policyErrors = validatePassword(password);
+      if (policyErrors.length > 0) {
+        setPasswordErrors(policyErrors);
+        setFormError(`Choose a stronger password. ${PASSWORD_REQUIREMENT_SUMMARY}`);
+        return;
+      }
+      if (password !== confirmPassword) {
+        setFormError("Passwords do not match.");
+        return;
+      }
     }
 
     setLoading(true);
@@ -97,7 +122,12 @@ export function AuthForm({ mode }: { mode: Mode }) {
       } else if (mode === "sign-in") {
         const { error } = await authService.signIn(email, password);
         if (error) throw error;
-        router.replace("/home");
+        const destination =
+          safeInternalPath(
+            searchParams.get("next"),
+            getTrustedSiteOrigin(),
+          ) ?? "/home";
+        router.replace(destination);
         router.refresh();
       } else if (mode === "forgot") {
         const { error } = await authService.requestPasswordReset(email);
@@ -106,19 +136,57 @@ export function AuthForm({ mode }: { mode: Mode }) {
       } else {
         const { error } = await authService.updatePassword(password);
         if (error) throw error;
-        toast.success("Password updated.");
-        router.replace("/home");
-        router.refresh();
+
+        setResetSucceeded(true);
+        const { error: cleanupError } = await authService.endRecoverySession();
+        if (cleanupError) {
+          setResetSucceeded(false);
+          setFormError(
+            "Your password was updated, but the temporary recovery session could not be closed. Sign out before continuing.",
+          );
+          return;
+        }
+
+        window.setTimeout(() => {
+          router.replace("/sign-in?reset=success");
+          router.refresh();
+        }, 1200);
       }
     } catch (error) {
-      toast.error(
-        authErrorMessage(
-          error instanceof Error ? error.message : "Authentication failed.",
-        ),
-      );
+      setFormError(authErrorMessage(error, mode));
     } finally {
       setLoading(false);
     }
+  }
+
+  async function cancelRecovery() {
+    setLoading(true);
+    setFormError("");
+    const { error } = await authService.endRecoverySession();
+    if (error) {
+      setFormError(
+        "The temporary recovery session could not be closed. Please try again.",
+      );
+      setLoading(false);
+      return;
+    }
+    router.replace("/sign-in");
+    router.refresh();
+  }
+
+  if (resetSucceeded) {
+    return (
+      <div className="w-full max-w-sm" role="status" aria-live="polite">
+        <p className="eyebrow">Recovery complete</p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-[-0.045em]">
+          Password updated successfully
+        </h1>
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">
+          Your temporary recovery session is closed. Redirecting you to sign in
+          with the new password…
+        </p>
+      </div>
+    );
   }
 
   if (sentTo) {
@@ -133,11 +201,13 @@ export function AuthForm({ mode }: { mode: Mode }) {
           secure password reset link.
         </p>
         <Button asChild className="mt-7 w-full" variant="outline">
-          <Link href="/login">Back to sign in</Link>
+          <Link href="/sign-in">Back to sign in</Link>
         </Button>
       </div>
     );
   }
+
+  const showsPasswordPolicy = mode === "sign-up" || mode === "reset";
 
   return (
     <div className="w-full max-w-sm">
@@ -148,7 +218,28 @@ export function AuthForm({ mode }: { mode: Mode }) {
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
         {content.desc}
       </p>
-      <form onSubmit={submit} className="mt-8 space-y-4">
+
+      {formError && (
+        <div
+          id="auth-form-error"
+          role="alert"
+          aria-live="assertive"
+          className="mt-5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
+        >
+          {formError}
+        </div>
+      )}
+      {statusMessage && !formError && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mt-5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-700 dark:text-emerald-300"
+        >
+          {statusMessage}
+        </div>
+      )}
+
+      <form onSubmit={submit} className="mt-8 space-y-4" noValidate>
         {mode !== "reset" && (
           <Field
             label="Email"
@@ -156,16 +247,37 @@ export function AuthForm({ mode }: { mode: Mode }) {
             placeholder="name@example.com"
             type="email"
             autoComplete="email"
+            aria-describedby={formError ? "auth-form-error" : undefined}
           />
         )}
         {(mode === "sign-in" || mode === "sign-up" || mode === "reset") && (
           <Field
             label={mode === "reset" ? "New password" : "Password"}
             name="password"
-            placeholder="At least 8 characters"
+            placeholder={showsPasswordPolicy ? "8+ characters, letters and numbers" : "Your password"}
             type="password"
             autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
+            aria-invalid={passwordErrors.length > 0 || undefined}
+            aria-describedby={
+              showsPasswordPolicy
+                ? formError
+                  ? "password-requirements auth-form-error"
+                  : "password-requirements"
+                : formError
+                  ? "auth-form-error"
+                  : undefined
+            }
           />
+        )}
+        {showsPasswordPolicy && (
+          <div id="password-requirements" className="rounded-lg bg-muted/60 p-3">
+            <p className="text-xs font-medium">Password requirements</p>
+            <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+              {PASSWORD_REQUIREMENTS.map((requirement) => (
+                <li key={requirement}>• {requirement}</li>
+              ))}
+            </ul>
+          </div>
         )}
         {(mode === "sign-up" || mode === "reset") && (
           <Field
@@ -174,6 +286,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
             placeholder="Repeat your password"
             type="password"
             autoComplete="new-password"
+            aria-describedby={formError ? "auth-form-error" : undefined}
           />
         )}
         {mode === "sign-in" && (
@@ -186,10 +299,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
             </Link>
           </div>
         )}
-        <Button className="w-full" size="lg" disabled={loading}>
+        <Button type="submit" className="w-full" size="lg" disabled={loading}>
           {loading ? "Please wait…" : content.submit}
         </Button>
       </form>
+
       <p className="mt-7 text-center text-xs text-muted-foreground">
         {mode === "sign-in" ? (
           <>
@@ -201,12 +315,21 @@ export function AuthForm({ mode }: { mode: Mode }) {
         ) : mode === "sign-up" ? (
           <>
             Already have an account?{" "}
-            <Link className="font-medium text-foreground hover:underline" href="/login">
+            <Link className="font-medium text-foreground hover:underline" href="/sign-in">
               Sign in
             </Link>
           </>
+        ) : mode === "reset" ? (
+          <button
+            type="button"
+            className="font-medium text-foreground hover:underline disabled:opacity-50"
+            disabled={loading}
+            onClick={cancelRecovery}
+          >
+            Cancel recovery and sign in
+          </button>
         ) : (
-          <Link className="font-medium text-foreground hover:underline" href="/login">
+          <Link className="font-medium text-foreground hover:underline" href="/sign-in">
             Back to sign in
           </Link>
         )}
@@ -224,6 +347,8 @@ function Field({
   placeholder: string;
   type: string;
   autoComplete: string;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
 }) {
   return (
     <label className="block text-sm font-medium">

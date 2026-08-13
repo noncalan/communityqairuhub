@@ -26,6 +26,24 @@ export const authService = {
     return createClient().auth.updateUser({ password });
   },
 
+  async endRecoverySession() {
+    try {
+      const response = await fetch("/auth/recovery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (response.ok) {
+        await createClient().auth.signOut({ scope: "local" });
+        return { error: null };
+      }
+    } catch {
+      // Fall through to a browser-local sign-out if the route is unreachable.
+    }
+
+    const { error } = await createClient().auth.signOut({ scope: "local" });
+    return { error };
+  },
+
   async signOut() {
     const supabase = createClient();
     await supabase.removeAllChannels();

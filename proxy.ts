@@ -3,6 +3,7 @@ import { isLiveMode } from "@/lib/app-mode";
 import { getProfileGate } from "@/lib/data/profiles";
 import { getTrustedSiteOrigin } from "@/lib/security/site-origin";
 import { updateSession } from "@/lib/supabase/proxy";
+import { RECOVERY_COOKIE_NAME } from "@/lib/auth/recovery";
 
 const authPages = new Set([
   "/login",
@@ -80,6 +81,17 @@ function secureResponse(response: NextResponse, contentSecurityPolicy: string) {
   return response;
 }
 
+function clearRecoveryCookie(response: NextResponse) {
+  response.cookies.set(RECOVERY_COOKIE_NAME, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  });
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
   const siteOrigin = getTrustedSiteOrigin();
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
@@ -98,6 +110,48 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith("/auth/")) return response;
 
   const userId = typeof claims?.sub === "string" ? claims.sub : null;
+  const recoveryFlow =
+    request.cookies.get(RECOVERY_COOKIE_NAME)?.value === "active";
+
+  if (recoveryFlow) {
+    if (!userId) {
+      if (pathname === "/reset-password") {
+        const forgotUrl = new URL("/forgot-password", siteOrigin);
+        forgotUrl.searchParams.set("error", "recovery_session_expired");
+        return clearRecoveryCookie(
+          redirectWithCookies(
+            forgotUrl,
+            response,
+            request,
+            contentSecurityPolicy,
+          ),
+        );
+      }
+      return clearRecoveryCookie(response);
+    }
+
+    if (pathname !== "/reset-password") {
+      return redirectWithCookies(
+        new URL("/reset-password", siteOrigin),
+        response,
+        request,
+        contentSecurityPolicy,
+      );
+    }
+    return response;
+  }
+
+  if (pathname === "/reset-password") {
+    const destination = new URL(userId ? "/home" : "/forgot-password", siteOrigin);
+    if (!userId) destination.searchParams.set("error", "invalid_recovery_session");
+    return redirectWithCookies(
+      destination,
+      response,
+      request,
+      contentSecurityPolicy,
+    );
+  }
+
   if (!userId) {
     if (publicPages.has(pathname)) return response;
     const loginUrl = new URL("/login", siteOrigin);

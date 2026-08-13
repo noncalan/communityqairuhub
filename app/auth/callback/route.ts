@@ -3,6 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { getProfileById } from "@/lib/data/profiles";
 import { safeInternalPath } from "@/lib/security/redirects";
 import { getTrustedSiteOrigin } from "@/lib/security/site-origin";
+import {
+  RECOVERY_COOKIE_NAME,
+  recoveryCookieOptions,
+} from "@/lib/auth/recovery";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -24,7 +28,17 @@ export async function GET(request: Request) {
     );
   }
 
-  if (next) return NextResponse.redirect(new URL(next, siteOrigin));
+  if (next) {
+    const response = NextResponse.redirect(new URL(next, siteOrigin));
+    if (next === "/reset-password") {
+      response.cookies.set(
+        RECOVERY_COOKIE_NAME,
+        "active",
+        recoveryCookieOptions,
+      );
+    }
+    return response;
+  }
   const profile = await getProfileById(supabase, data.user.id);
   return NextResponse.redirect(
     new URL(
