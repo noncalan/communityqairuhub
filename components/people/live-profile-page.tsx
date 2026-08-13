@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { MessageCircle } from "lucide-react";
-import { toast } from "sonner";
 import { AvatarMark } from "@/components/shared/avatar-mark";
+import { MessageButton } from "@/components/messages/message-button";
 import { FollowButton } from "@/components/social/follow-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,8 +25,6 @@ export function LiveProfilePage({
   followerCount: number;
   followingCount: number;
 }) {
-  const demoOnly = (action: string) =>
-    toast.info(`${action} stays demo-only in this release; no database record was created.`);
   return (
     <div className="page-container">
       <div className="grid gap-10 xl:grid-cols-[1fr_290px]">
@@ -52,7 +49,7 @@ export function LiveProfilePage({
                     initialFollowerCount={followerCount}
                     showCount
                   />
-                  <Button variant="outline" onClick={() => demoOnly("Messaging")}><MessageCircle className="size-4" />Message</Button>
+                  <MessageButton targetProfileId={profile.id} />
                 </>
               )}
             </div>

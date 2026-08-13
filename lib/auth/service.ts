@@ -27,6 +27,8 @@ export const authService = {
   },
 
   async signOut() {
-    return createClient().auth.signOut();
+    const supabase = createClient();
+    await supabase.removeAllChannels();
+    return supabase.auth.signOut();
   },
 };

@@ -140,6 +140,84 @@ export type Database = {
           },
         ]
       }
+      conversation_members: {
+        Row: {
+          conversation_id: string
+          joined_at: string
+          last_read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          joined_at?: string
+          last_read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_members_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          direct_user_high: string
+          direct_user_low: string
+          id: string
+          kind: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          direct_user_high: string
+          direct_user_low: string
+          id?: string
+          kind?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          direct_user_high?: string
+          direct_user_low?: string
+          id?: string
+          kind?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_direct_user_high_fkey"
+            columns: ["direct_user_high"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_direct_user_low_fkey"
+            columns: ["direct_user_low"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_attendees: {
         Row: {
           created_at: string
@@ -309,6 +387,109 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          recipient_id: string
+          sender_id?: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          dedupe_key: string
+          entity_id: string
+          entity_type: string
+          id: string
+          payload: Json
+          read_at: string | null
+          recipient_id: string
+          type: Database["public"]["Enums"]["notification_type"]
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          dedupe_key: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          payload?: Json
+          read_at?: string | null
+          recipient_id: string
+          type: Database["public"]["Enums"]["notification_type"]
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          dedupe_key?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          payload?: Json
+          read_at?: string | null
+          recipient_id?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       post_bookmarks: {
         Row: {
@@ -1006,12 +1187,61 @@ export type Database = {
         }
         Returns: string
       }
+      get_my_unread_message_count: { Args: never; Returns: number }
+      get_or_create_direct_conversation: {
+        Args: { other_profile_id: string }
+        Returns: string
+      }
+      list_my_conversations: {
+        Args: never
+        Returns: {
+          conversation_id: string
+          last_message_body: string
+          last_message_created_at: string
+          last_message_id: string
+          last_message_sender_id: string
+          other_avatar_url: string
+          other_full_name: string
+          other_profile_id: string
+          other_username: string
+          unread_count: number
+          updated_at: string
+        }[]
+      }
+      mark_conversation_read: {
+        Args: { target_conversation_id: string }
+        Returns: string
+      }
+      send_message: {
+        Args: { message_body: string; target_conversation_id: string }
+        Returns: {
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          recipient_id: string
+          sender_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       app_role: "student" | "community_moderator" | "admin"
       application_status: "pending" | "accepted" | "rejected" | "withdrawn"
       community_member_role: "owner" | "moderator" | "member"
       community_status: "forming" | "active"
+      notification_type:
+        | "new_follower"
+        | "post_comment"
+        | "post_like"
+        | "project_application"
+        | "project_application_accepted"
+        | "project_application_rejected"
       project_status: "idea" | "building" | "launched" | "completed"
       resource_type: "guide" | "notes" | "repository" | "link" | "document"
     }
@@ -1145,6 +1375,14 @@ export const Constants = {
       application_status: ["pending", "accepted", "rejected", "withdrawn"],
       community_member_role: ["owner", "moderator", "member"],
       community_status: ["forming", "active"],
+      notification_type: [
+        "new_follower",
+        "post_comment",
+        "post_like",
+        "project_application",
+        "project_application_accepted",
+        "project_application_rejected",
+      ],
       project_status: ["idea", "building", "launched", "completed"],
       resource_type: ["guide", "notes", "repository", "link", "document"],
     },

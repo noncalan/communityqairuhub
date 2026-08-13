@@ -1,10 +1,10 @@
 "use client";
 
 import { useDeferredValue, useMemo, useState } from "react";
-import { MessageCircle, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { AvatarMark } from "@/components/shared/avatar-mark";
+import { MessageButton } from "@/components/messages/message-button";
 import { FollowButton } from "@/components/social/follow-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -106,7 +106,6 @@ function LiveStudentCard({ profile, follows }: { profile: LiveProfile; follows: 
   const { profile: currentProfile } = useCurrentUser();
   const own = currentProfile.id === profile.id;
   const open = () => router.push(`/u/${profile.username}`);
-  const demoOnly = (action: string) => toast.info(`${action} is not connected in live mode yet.`);
   return (
     <article role="link" tabIndex={0} onClick={open} onKeyDown={(event) => event.key === "Enter" && open()} className="group cursor-pointer border-b py-5 first:pt-0 last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
       <div className="flex gap-4">
@@ -130,7 +129,7 @@ function LiveStudentCard({ profile, follows }: { profile: LiveProfile; follows: 
                   initialFollowing={follows.followingIds.includes(profile.id)}
                   initialFollowerCount={follows.followerCounts[profile.id] ?? 0}
                 />
-                <Button size="sm" variant="outline" onClick={() => demoOnly("Messaging")}><MessageCircle className="size-3.5" />Message</Button>
+                <MessageButton targetProfileId={profile.id} />
               </>
             )}
           </div>
