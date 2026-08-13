@@ -14,6 +14,238 @@ export type Database = {
   }
   public: {
     Tables: {
+      communities: {
+        Row: {
+          category: string
+          created_at: string
+          creator_id: string
+          description: string
+          id: string
+          name: string
+          slug: string
+          status: Database["public"]["Enums"]["community_status"]
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          creator_id: string
+          description: string
+          id?: string
+          name: string
+          slug: string
+          status?: Database["public"]["Enums"]["community_status"]
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          creator_id?: string
+          description?: string
+          id?: string
+          name?: string
+          slug?: string
+          status?: Database["public"]["Enums"]["community_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communities_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_members: {
+        Row: {
+          community_id: string
+          joined_at: string
+          profile_id: string
+          role: Database["public"]["Enums"]["community_member_role"]
+        }
+        Insert: {
+          community_id: string
+          joined_at?: string
+          profile_id: string
+          role?: Database["public"]["Enums"]["community_member_role"]
+        }
+        Update: {
+          community_id?: string
+          joined_at?: string
+          profile_id?: string
+          role?: Database["public"]["Enums"]["community_member_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_members_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_attendees: {
+        Row: {
+          created_at: string
+          event_id: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendees_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_attendees_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_saves: {
+        Row: {
+          created_at: string
+          event_id: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_saves_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_saves_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          capacity: number
+          category: string
+          created_at: string
+          description: string
+          ends_at: string
+          id: string
+          location: string
+          organizer_id: string
+          slug: string
+          starts_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          capacity: number
+          category: string
+          created_at?: string
+          description: string
+          ends_at: string
+          id?: string
+          location: string
+          organizer_id: string
+          slug: string
+          starts_at: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number
+          category?: string
+          created_at?: string
+          description?: string
+          ends_at?: string
+          id?: string
+          location?: string
+          organizer_id?: string
+          slug?: string
+          starts_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interests: {
         Row: {
           created_at: string
@@ -166,6 +398,235 @@ export type Database = {
         }
         Relationships: []
       }
+      project_applications: {
+        Row: {
+          applicant_id: string
+          created_at: string
+          id: string
+          message: string
+          project_id: string
+          project_role_id: string
+          status: Database["public"]["Enums"]["application_status"]
+          updated_at: string
+        }
+        Insert: {
+          applicant_id: string
+          created_at?: string
+          id?: string
+          message: string
+          project_id: string
+          project_role_id: string
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+        }
+        Update: {
+          applicant_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          project_id?: string
+          project_role_id?: string
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_applications_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_applications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_applications_project_role_id_project_id_fkey"
+            columns: ["project_role_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "project_roles"
+            referencedColumns: ["id", "project_id"]
+          },
+        ]
+      }
+      project_members: {
+        Row: {
+          can_edit: boolean
+          joined_at: string
+          profile_id: string
+          project_id: string
+          role_title: string
+        }
+        Insert: {
+          can_edit?: boolean
+          joined_at?: string
+          profile_id: string
+          project_id: string
+          role_title: string
+        }
+        Update: {
+          can_edit?: boolean
+          joined_at?: string
+          profile_id?: string
+          project_id?: string
+          role_title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_roles: {
+        Row: {
+          created_at: string
+          id: string
+          is_open: boolean
+          project_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_open?: boolean
+          project_id: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_open?: boolean
+          project_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_roles_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_saves: {
+        Row: {
+          created_at: string
+          profile_id: string
+          project_id: string
+        }
+        Insert: {
+          created_at?: string
+          profile_id: string
+          project_id: string
+        }
+        Update: {
+          created_at?: string
+          profile_id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_saves_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_saves_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_technologies: {
+        Row: {
+          name: string
+          project_id: string
+        }
+        Insert: {
+          name: string
+          project_id: string
+        }
+        Update: {
+          name?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_technologies_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          category: string
+          created_at: string
+          creator_id: string
+          description: string
+          id: string
+          name: string
+          slug: string
+          status: Database["public"]["Enums"]["project_status"]
+          tagline: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          creator_id: string
+          description: string
+          id?: string
+          name: string
+          slug: string
+          status?: Database["public"]["Enums"]["project_status"]
+          tagline: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          creator_id?: string
+          description?: string
+          id?: string
+          name?: string
+          slug?: string
+          status?: Database["public"]["Enums"]["project_status"]
+          tagline?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       skills: {
         Row: {
           created_at: string
@@ -207,10 +668,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_project: {
+        Args: {
+          project_category: string
+          project_description: string
+          project_name: string
+          project_slug: string
+          project_status: Database["public"]["Enums"]["project_status"]
+          project_tagline: string
+          roles_needed: string[]
+          technologies: string[]
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "student" | "community_moderator" | "admin"
+      application_status: "pending" | "accepted" | "rejected" | "withdrawn"
+      community_member_role: "owner" | "moderator" | "member"
+      community_status: "forming" | "active"
+      project_status: "idea" | "building" | "launched" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -339,7 +816,10 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["student", "community_moderator", "admin"],
+      application_status: ["pending", "accepted", "rejected", "withdrawn"],
+      community_member_role: ["owner", "moderator", "member"],
+      community_status: ["forming", "active"],
+      project_status: ["idea", "building", "launched", "completed"],
     },
   },
 } as const
-

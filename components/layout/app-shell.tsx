@@ -70,7 +70,7 @@ function DemoAccountCard() {
   const { state } = useDemoState();
   return (
     <Link href={`/u/${state.profile.username}`} className="m-3 flex items-center gap-3 rounded-lg border bg-background p-2.5 transition-colors hover:bg-accent">
-      <AvatarMark initials={initials(state.profile.name)} color="#5b6fd8" className="size-8" />
+      <AvatarMark initials={initials(state.profile.name)} color="#4f5fc4" className="size-8" />
       <div className="min-w-0">
         <p className="truncate text-xs font-semibold">{state.profile.name}</p>
         <p className="truncate text-[11px] text-muted-foreground">{state.profile.program} · Year {state.profile.year}</p>
@@ -83,7 +83,7 @@ function DemoAccountMenu() {
   const { state } = useDemoState();
   return (
     <Link href={`/u/${state.profile.username}`} aria-label="Open your profile">
-      <AvatarMark initials={initials(state.profile.name)} color="#5b6fd8" className="size-8" />
+      <AvatarMark initials={initials(state.profile.name)} color="#4f5fc4" className="size-8" />
     </Link>
   );
 }
@@ -102,11 +102,11 @@ function LiveAccountMenu({ compact = false }: { compact?: boolean }) {
       <DropdownMenuTrigger asChild>
         {compact ? (
           <Button variant="ghost" size="icon" aria-label="Open account menu">
-            <AvatarMark initials={initials(profile.fullName)} color="#5b6fd8" className="size-8" />
+            <AvatarMark initials={initials(profile.fullName)} color="#4f5fc4" className="size-8" />
           </Button>
         ) : (
           <button className="m-3 flex items-center gap-3 rounded-lg border bg-background p-2.5 text-start transition-colors hover:bg-accent">
-            <AvatarMark initials={initials(profile.fullName)} color="#5b6fd8" className="size-8" />
+            <AvatarMark initials={initials(profile.fullName)} color="#4f5fc4" className="size-8" />
             <span className="min-w-0">
               <span className="block truncate text-xs font-semibold">{profile.fullName}</span>
               <span className="block truncate text-[11px] text-muted-foreground">{profile.program} · Year {profile.academicYear}</span>

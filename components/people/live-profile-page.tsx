@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { MessageCircle, UserPlus } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { AvatarMark } from "@/components/shared/avatar-mark";
+import { FollowButton } from "@/components/social/follow-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { LiveProfile } from "@/lib/data/profiles";
@@ -12,7 +13,19 @@ function initials(name: string) {
   return name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 }
 
-export function LiveProfilePage({ profile, own }: { profile: LiveProfile; own: boolean }) {
+export function LiveProfilePage({
+  profile,
+  own,
+  following,
+  followerCount,
+  followingCount,
+}: {
+  profile: LiveProfile;
+  own: boolean;
+  following: boolean;
+  followerCount: number;
+  followingCount: number;
+}) {
   const demoOnly = (action: string) =>
     toast.info(`${action} stays demo-only in this release; no database record was created.`);
   return (
@@ -20,7 +33,7 @@ export function LiveProfilePage({ profile, own }: { profile: LiveProfile; own: b
       <div className="grid gap-10 xl:grid-cols-[1fr_290px]">
         <div>
           <header className="flex flex-col gap-5 border-b pb-8 sm:flex-row sm:items-start">
-            <AvatarMark initials={initials(profile.fullName)} color="#5b6fd8" className="size-24" />
+            <AvatarMark initials={initials(profile.fullName)} color="#4f5fc4" className="size-24" />
             <div className="flex-1">
               <p className="eyebrow">@{profile.username}</p>
               <h1 className="mt-2 text-3xl font-semibold tracking-[-0.045em]">{profile.fullName}</h1>
@@ -32,7 +45,13 @@ export function LiveProfilePage({ profile, own }: { profile: LiveProfile; own: b
                 <Button asChild><Link href="/settings?tab=profile">Edit profile</Link></Button>
               ) : (
                 <>
-                  <Button onClick={() => demoOnly("Follow")}><UserPlus className="size-4" />Follow</Button>
+                  <FollowButton
+                    profileId={profile.id}
+                    username={profile.username}
+                    initialFollowing={following}
+                    initialFollowerCount={followerCount}
+                    showCount
+                  />
                   <Button variant="outline" onClick={() => demoOnly("Messaging")}><MessageCircle className="size-4" />Message</Button>
                 </>
               )}
@@ -60,6 +79,7 @@ export function LiveProfilePage({ profile, own }: { profile: LiveProfile; own: b
           <div className="surface rounded-lg p-5">
             <p className="eyebrow">About</p>
             <dl className="mt-5 space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-4 border-b pb-4"><div><dt className="text-muted-foreground">Followers</dt><dd className="mt-1 text-lg font-semibold">{followerCount}</dd></div><div><dt className="text-muted-foreground">Following</dt><dd className="mt-1 text-lg font-semibold">{followingCount}</dd></div></div>
               <div><dt className="text-muted-foreground">Availability</dt><dd className="mt-1 font-medium">{profile.availableForProjects ? "Open to projects" : "Focused on current work"}</dd></div>
               <div><dt className="text-muted-foreground">Collaboration</dt><dd className="mt-1 font-medium">{profile.openToCollaboration ? "Open to collaboration" : "Not accepting requests"}</dd></div>
             </dl>

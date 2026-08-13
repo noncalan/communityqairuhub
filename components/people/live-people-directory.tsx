@@ -1,21 +1,23 @@
 "use client";
 
 import { useDeferredValue, useMemo, useState } from "react";
-import { MessageCircle, Search, UserPlus, X } from "lucide-react";
+import { MessageCircle, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AvatarMark } from "@/components/shared/avatar-mark";
+import { FollowButton } from "@/components/social/follow-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/lib/auth/current-user-provider";
 import type { LiveProfile } from "@/lib/data/profiles";
+import type { FollowSnapshot } from "@/lib/data/social";
 
 function initials(name: string) {
   return name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 }
 
-export function LivePeopleDirectory({ profiles }: { profiles: LiveProfile[] }) {
+export function LivePeopleDirectory({ profiles, follows }: { profiles: LiveProfile[]; follows: FollowSnapshot }) {
   const [query, setQuery] = useState("");
   const [program, setProgram] = useState("All");
   const [skill, setSkill] = useState("All");
@@ -76,7 +78,7 @@ export function LivePeopleDirectory({ profiles }: { profiles: LiveProfile[] }) {
       </div>
       {filtered.length ? (
         <div className="grid gap-x-10 lg:grid-cols-2">
-          {filtered.map((profile) => <LiveStudentCard key={profile.id} profile={profile} />)}
+          {filtered.map((profile) => <LiveStudentCard key={profile.id} profile={profile} follows={follows} />)}
         </div>
       ) : (
         <div className="surface rounded-lg py-20 text-center">
@@ -99,7 +101,7 @@ function Filter({ label, value, setValue, options }: { label: string; value: str
   );
 }
 
-function LiveStudentCard({ profile }: { profile: LiveProfile }) {
+function LiveStudentCard({ profile, follows }: { profile: LiveProfile; follows: FollowSnapshot }) {
   const router = useRouter();
   const { profile: currentProfile } = useCurrentUser();
   const own = currentProfile.id === profile.id;
@@ -108,7 +110,7 @@ function LiveStudentCard({ profile }: { profile: LiveProfile }) {
   return (
     <article role="link" tabIndex={0} onClick={open} onKeyDown={(event) => event.key === "Enter" && open()} className="group cursor-pointer border-b py-5 first:pt-0 last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
       <div className="flex gap-4">
-        <AvatarMark initials={initials(profile.fullName)} color="#5b6fd8" className="size-11" />
+        <AvatarMark initials={initials(profile.fullName)} color="#4f5fc4" className="size-11" />
         <div className="min-w-0 flex-1">
           <h2 className="font-semibold tracking-[-0.02em] group-hover:text-primary">{profile.fullName}</h2>
           <p className="text-xs text-muted-foreground">@{profile.username} · {profile.program}, Year {profile.academicYear}</p>
@@ -122,7 +124,12 @@ function LiveStudentCard({ profile }: { profile: LiveProfile }) {
               <Button size="sm" variant="outline" onClick={() => router.push("/settings?tab=profile")}>Edit profile</Button>
             ) : (
               <>
-                <Button size="sm" onClick={() => demoOnly("Follow")}><UserPlus className="size-3.5" />Follow</Button>
+                <FollowButton
+                  profileId={profile.id}
+                  username={profile.username}
+                  initialFollowing={follows.followingIds.includes(profile.id)}
+                  initialFollowerCount={follows.followerCounts[profile.id] ?? 0}
+                />
                 <Button size="sm" variant="outline" onClick={() => demoOnly("Messaging")}><MessageCircle className="size-3.5" />Message</Button>
               </>
             )}

@@ -2,17 +2,20 @@ import { SearchableDirectory } from "@/components/catalog/searchable-directory";
 import { LivePeopleDirectory } from "@/components/people/live-people-directory";
 import { PageHeading } from "@/components/shared/page-heading";
 import { isLiveMode } from "@/lib/app-mode";
+import { getCurrentUser } from "@/lib/auth/current-user";
 import { listCompletedProfiles } from "@/lib/data/profiles";
-import { createClient } from "@/lib/supabase/server";
+import { getFollowSnapshot } from "@/lib/data/social";
 
 export default async function Page() {
-  const profiles = isLiveMode
-    ? await listCompletedProfiles(await createClient())
+  const live = isLiveMode ? await getCurrentUser() : null;
+  const profiles = live ? await listCompletedProfiles(live.supabase) : null;
+  const follows = live && live.userId && profiles
+    ? await getFollowSnapshot(live.supabase, live.userId, profiles.map((profile) => profile.id))
     : null;
   return (
     <div className="page-container">
       <PageHeading eyebrow="Student directory" title="People at QAIRU" description="Find collaborators by program, skills, interests and what they want to build next." />
-      {profiles ? <LivePeopleDirectory profiles={profiles} /> : <SearchableDirectory type="people" />}
+      {profiles && follows ? <LivePeopleDirectory profiles={profiles} follows={follows} /> : <SearchableDirectory type="people" />}
     </div>
   );
 }

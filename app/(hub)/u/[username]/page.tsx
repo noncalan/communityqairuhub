@@ -4,6 +4,7 @@ import { ProfilePage } from "@/components/people/profile-page";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { isLiveMode } from "@/lib/app-mode";
 import { getProfileByUsername } from "@/lib/data/profiles";
+import { getFollowSnapshot } from "@/lib/data/social";
 
 export default async function Page({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
@@ -11,5 +12,13 @@ export default async function Page({ params }: { params: Promise<{ username: str
   const { supabase, userId } = await getCurrentUser();
   const profile = await getProfileByUsername(supabase, username);
   if (!profile) notFound();
-  return <LiveProfilePage profile={profile} own={profile.id === userId} />;
+  if (!userId) notFound();
+  const follows = await getFollowSnapshot(supabase, userId, [profile.id]);
+  return <LiveProfilePage
+    profile={profile}
+    own={profile.id === userId}
+    following={follows.followingIds.includes(profile.id)}
+    followerCount={follows.followerCounts[profile.id] ?? 0}
+    followingCount={follows.followingCounts[profile.id] ?? 0}
+  />;
 }

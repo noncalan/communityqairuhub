@@ -5,12 +5,59 @@ import { useRouter } from "next/navigation";
 import { BookOpen, CalendarDays, FolderKanban, Search, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
+import { isLiveMode } from "@/lib/app-mode";
 import { communities, events, projects, resources, students } from "@/lib/data/mock";
 import { useDemoState } from "@/lib/demo/demo-store";
 
-export function CommandSearch({compact=false,listenShortcut=true}:{compact?:boolean;listenShortcut?:boolean}){
-  const [open,setOpen]=useState(false);const router=useRouter();const {state}=useDemoState();
-  useEffect(()=>{if(!listenShortcut)return;const onKey=(event:KeyboardEvent)=>{if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==="k"){event.preventDefault();setOpen(value=>!value)}};window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey)},[listenShortcut]);
-  const go=(href:string)=>{setOpen(false);router.push(href)};
-  return <><Button variant="outline" className={compact?"size-9 px-0":"h-9 w-full justify-start bg-background text-muted-foreground shadow-none"} onClick={()=>setOpen(true)} aria-label="Open global search"><Search className="size-4"/>{!compact&&<><span className="ms-2">Search QAIRU</span><kbd className="ms-auto rounded border bg-muted px-1.5 font-mono text-[10px]">⌘ K</kbd></>}</Button><CommandDialog open={open} onOpenChange={setOpen} title="Search QAIRU Hub" description="Find people, communities, projects, events and resources"><CommandInput placeholder="Search the campus…"/><CommandList><CommandEmpty>No results found.</CommandEmpty><CommandGroup heading="People">{students.map(item=><CommandItem key={item.username} value={`${item.name} ${item.username} ${item.skills.join(" ")}`} onSelect={()=>go(`/u/${item.username}`)}><Users className="size-4"/><span>{item.name}</span><span className="ms-auto text-xs text-muted-foreground">{item.program}</span></CommandItem>)}</CommandGroup><CommandSeparator/><CommandGroup heading="Communities & projects">{[...state.createdCommunities,...communities].map(item=><CommandItem key={item.slug} value={`${item.name} ${item.category}`} onSelect={()=>go(`/communities/${item.slug}`)}><Sparkles className="size-4"/>{item.name}</CommandItem>)}{[...state.createdProjects,...projects].map(item=><CommandItem key={item.slug} value={`${item.name} ${item.technologies.join(" ")}`} onSelect={()=>go(`/projects/${item.slug}`)}><FolderKanban className="size-4"/>{item.name}</CommandItem>)}</CommandGroup><CommandSeparator/><CommandGroup heading="Events">{[...state.createdEvents,...events].map(item=><CommandItem key={item.slug} value={`${item.title} ${item.location}`} onSelect={()=>go(`/events/${item.slug}`)}><CalendarDays className="size-4"/>{item.title}<span className="ms-auto text-xs text-muted-foreground">{item.date}</span></CommandItem>)}</CommandGroup><CommandSeparator/><CommandGroup heading="Resources">{[...state.createdResources,...resources].map(item=><CommandItem key={item.id} value={`${item.title} ${item.tags.join(" ")}`} onSelect={()=>go(`/resources?resource=${item.id}`)}><BookOpen className="size-4"/>{item.title}</CommandItem>)}</CommandGroup></CommandList></CommandDialog></>;
+export function CommandSearch({ compact = false, listenShortcut = true }: { compact?: boolean; listenShortcut?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const { state } = useDemoState();
+
+  useEffect(() => {
+    if (!listenShortcut) return;
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setOpen((value) => !value);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [listenShortcut]);
+
+  const go = (href: string) => {
+    setOpen(false);
+    router.push(href);
+  };
+
+  return <>
+    <Button variant="outline" className={compact ? "size-9 px-0" : "h-9 w-full justify-start bg-background text-muted-foreground shadow-none"} onClick={() => setOpen(true)} aria-label="Open global search">
+      <Search className="size-4" />
+      {!compact && <><span className="ms-2">Search QAIRU</span><kbd className="ms-auto rounded border bg-muted px-1.5 font-mono text-[10px]">Ctrl K</kbd></>}
+    </Button>
+    <CommandDialog open={open} onOpenChange={setOpen} title="Search QAIRU Hub" description="Find people, communities, projects and events">
+      <CommandInput placeholder="Search the campus…" />
+      <CommandList>
+        <CommandEmpty>No results found.</CommandEmpty>
+        {isLiveMode ? <CommandGroup heading="Explore live data">
+          <CommandItem value="people students directory" onSelect={() => go("/people")}><Users className="size-4" />People</CommandItem>
+          <CommandItem value="communities groups" onSelect={() => go("/communities")}><Sparkles className="size-4" />Communities</CommandItem>
+          <CommandItem value="projects roles" onSelect={() => go("/projects")}><FolderKanban className="size-4" />Projects</CommandItem>
+          <CommandItem value="events calendar" onSelect={() => go("/events")}><CalendarDays className="size-4" />Events</CommandItem>
+        </CommandGroup> : <>
+          <CommandGroup heading="People">{students.map((item) => <CommandItem key={item.username} value={`${item.name} ${item.username} ${item.skills.join(" ")}`} onSelect={() => go(`/u/${item.username}`)}><Users className="size-4" /><span>{item.name}</span><span className="ms-auto text-xs text-muted-foreground">{item.program}</span></CommandItem>)}</CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Communities & projects">
+            {[...state.createdCommunities, ...communities].map((item) => <CommandItem key={item.slug} value={`${item.name} ${item.category}`} onSelect={() => go(`/communities/${item.slug}`)}><Sparkles className="size-4" />{item.name}</CommandItem>)}
+            {[...state.createdProjects, ...projects].map((item) => <CommandItem key={item.slug} value={`${item.name} ${item.technologies.join(" ")}`} onSelect={() => go(`/projects/${item.slug}`)}><FolderKanban className="size-4" />{item.name}</CommandItem>)}
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Events">{[...state.createdEvents, ...events].map((item) => <CommandItem key={item.slug} value={`${item.title} ${item.location}`} onSelect={() => go(`/events/${item.slug}`)}><CalendarDays className="size-4" />{item.title}<span className="ms-auto text-xs text-muted-foreground">{item.date}</span></CommandItem>)}</CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Resources">{[...state.createdResources, ...resources].map((item) => <CommandItem key={item.id} value={`${item.title} ${item.tags.join(" ")}`} onSelect={() => go(`/resources?resource=${item.id}`)}><BookOpen className="size-4" />{item.title}</CommandItem>)}</CommandGroup>
+        </>}
+      </CommandList>
+    </CommandDialog>
+  </>;
 }
