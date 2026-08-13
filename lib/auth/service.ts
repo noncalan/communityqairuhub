@@ -1,14 +1,14 @@
 import { createClient } from "@/lib/supabase/client";
-
-const siteUrl = () =>
-  process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
+import { getTrustedSiteOrigin } from "@/lib/security/site-origin";
 
 export const authService = {
   async signUp(email: string, password: string) {
     return createClient().auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${siteUrl()}/auth/callback` },
+      options: {
+        emailRedirectTo: `${getTrustedSiteOrigin()}/auth/callback`,
+      },
     });
   },
 
@@ -18,7 +18,7 @@ export const authService = {
 
   async requestPasswordReset(email: string) {
     return createClient().auth.resetPasswordForEmail(email, {
-      redirectTo: `${siteUrl()}/auth/callback?next=/reset-password`,
+      redirectTo: `${getTrustedSiteOrigin()}/auth/callback?next=/reset-password`,
     });
   },
 

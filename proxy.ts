@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isLiveMode } from "@/lib/app-mode";
 import { getProfileGate } from "@/lib/data/profiles";
+import { getTrustedSiteOrigin } from "@/lib/security/site-origin";
 import { updateSession } from "@/lib/supabase/proxy";
 
 const authPages = new Set([
@@ -80,6 +81,7 @@ function secureResponse(response: NextResponse, contentSecurityPolicy: string) {
 }
 
 export async function proxy(request: NextRequest) {
+  const siteOrigin = getTrustedSiteOrigin();
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const contentSecurityPolicy = createContentSecurityPolicy(nonce);
   const forwardedHeaders = new Headers(request.headers);
@@ -98,7 +100,7 @@ export async function proxy(request: NextRequest) {
   const userId = typeof claims?.sub === "string" ? claims.sub : null;
   if (!userId) {
     if (publicPages.has(pathname)) return response;
-    const loginUrl = new URL("/login", request.url);
+    const loginUrl = new URL("/login", siteOrigin);
     loginUrl.searchParams.set("next", pathname);
     return redirectWithCookies(
       loginUrl,
@@ -112,7 +114,7 @@ export async function proxy(request: NextRequest) {
   if (pathname === "/onboarding") {
     return profile?.onboarding_completed
       ? redirectWithCookies(
-          new URL("/home", request.url),
+          new URL("/home", siteOrigin),
           response,
           request,
           contentSecurityPolicy,
@@ -121,7 +123,7 @@ export async function proxy(request: NextRequest) {
   }
   if (!profile?.onboarding_completed && pathname !== "/reset-password") {
     return redirectWithCookies(
-      new URL("/onboarding", request.url),
+      new URL("/onboarding", siteOrigin),
       response,
       request,
       contentSecurityPolicy,
@@ -129,7 +131,7 @@ export async function proxy(request: NextRequest) {
   }
   if (authPages.has(pathname)) {
     return redirectWithCookies(
-      new URL("/home", request.url),
+      new URL("/home", siteOrigin),
       response,
       request,
       contentSecurityPolicy,

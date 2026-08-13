@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { getTrustedSiteOrigin } from "@/lib/security/site-origin";
 import "./globals.css";
 
 // A fresh CSP nonce is forwarded by proxy.ts on every request. Nonces can only
@@ -18,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(getTrustedSiteOrigin()),
   title: { default: "QAIRU Hub", template: "%s · QAIRU Hub" },
   description: "Discover people, communities, projects, events and opportunities across QAIRU.",
   openGraph: {
