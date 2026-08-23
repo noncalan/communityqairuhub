@@ -38,6 +38,19 @@ describe("authErrorMessage", () => {
     );
   });
 
+  it("explains unavailable sign-up email delivery without provider details", () => {
+    assert.equal(
+      authErrorMessage(
+        {
+          code: "email_address_not_authorized",
+          message: "internal SMTP configuration detail",
+        },
+        "sign-up",
+      ),
+      "Sign-up email delivery is currently unavailable for this address. Please contact the QAIRU Hub team.",
+    );
+  });
+
   it("maps weak-password and expired recovery errors", () => {
     assert.match(
       authErrorMessage({ code: "weak_password" }, "reset"),

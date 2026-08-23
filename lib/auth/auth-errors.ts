@@ -47,6 +47,9 @@ export function authErrorMessage(error: unknown, context: AuthContext) {
   if (code === "user_already_exists" || /user already registered/i.test(message)) {
     return "Authentication could not be completed. Try signing in or resetting your password.";
   }
+  if (code === "email_address_not_authorized") {
+    return "Sign-up email delivery is currently unavailable for this address. Please contact the QAIRU Hub team.";
+  }
   if (
     code === "over_request_rate_limit" ||
     code === "over_email_send_rate_limit" ||

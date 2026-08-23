@@ -37,6 +37,26 @@ try {
     $response.Content,
     '<script[^>]+nonce="([^"]+)"'
   ) | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique
+  $scriptCount = [regex]::Matches(
+    $response.Content,
+    '<script\b[^>]*>'
+  ).Count
+  $styleTagCount = [regex]::Matches(
+    $response.Content,
+    '<style\b[^>]*>'
+  ).Count
+  $styleNonceCount = [regex]::Matches(
+    $response.Content,
+    '<style\b[^>]*nonce="[^"]+"[^>]*>'
+  ).Count
+  $stylesheetCount = [regex]::Matches(
+    $response.Content,
+    '<link\b(?=[^>]*rel="stylesheet")[^>]*>'
+  ).Count
+  $stylesheetNonceCount = [regex]::Matches(
+    $response.Content,
+    '<link\b(?=[^>]*rel="stylesheet")(?=[^>]*nonce="[^"]+")[^>]*>'
+  ).Count
 
   $checks = [ordered]@{
     Status = $response.StatusCode
@@ -47,9 +67,15 @@ try {
     )
     CspNoncePresent = $nonceMatch.Success
     ScriptNonceCount = @($scriptNonces).Count
+    NoScriptMissingNonce = $scriptCount -eq [regex]::Matches(
+      $response.Content,
+      '<script\b[^>]*nonce="[^"]+"[^>]*>'
+    ).Count
     AllScriptNoncesMatch = @(
       $scriptNonces | Where-Object { $_ -ne $nonceMatch.Groups[1].Value }
     ).Count -eq 0
+    NoStyleTagMissingNonce = $styleTagCount -eq $styleNonceCount
+    NoStylesheetMissingNonce = $stylesheetCount -eq $stylesheetNonceCount
     NoSniff = $response.Headers["X-Content-Type-Options"] -eq "nosniff"
     FrameDenied = $response.Headers["X-Frame-Options"] -eq "DENY"
     ReferrerPolicy = $response.Headers["Referrer-Policy"] -eq "strict-origin-when-cross-origin"

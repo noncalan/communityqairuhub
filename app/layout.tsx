@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import { Providers } from "@/components/providers";
 import { getTrustedSiteOrigin } from "@/lib/security/site-origin";
 import "./globals.css";
@@ -31,14 +32,22 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", images: ["/og.png"] },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full"><Providers>{children}</Providers></body>
+      <body className="min-h-full">
+        <Providers nonce={nonce}>{children}</Providers>
+      </body>
     </html>
   );
 }
