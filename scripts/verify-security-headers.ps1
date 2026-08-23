@@ -33,6 +33,7 @@ try {
 
   $csp = [string]$response.Headers["Content-Security-Policy"]
   $nonceMatch = [regex]::Match($csp, "'nonce-([^']+)'")
+  $styleSrcMatch = [regex]::Match($csp, "(?:^|;\s*)style-src\s+([^;]+)")
   $scriptNonces = [regex]::Matches(
     $response.Content,
     '<script[^>]+nonce="([^"]+)"'
@@ -62,9 +63,10 @@ try {
     Status = $response.StatusCode
     CspPresent = [bool]$csp
     CspHasStrictDynamic = $csp.Contains("'strict-dynamic'")
-    CspAllowsPinnedSonnerStyles = $csp.Contains(
-      "'sha256-StEaX+se6YS7pqjzrzMIA0KaX9zF/8zAhvQXZAe5epY='"
+    CspBlocksUnsafeInlineStyleBlocks = $styleSrcMatch.Success -and -not (
+      $styleSrcMatch.Groups[1].Value.Contains("'unsafe-inline'")
     )
+    CspAvoidsUnsafeStyleHashes = -not $csp.Contains("'unsafe-hashes'")
     CspBlocksUnsafeInlineScript = -not $csp.Contains(
       "script-src 'unsafe-inline'"
     )

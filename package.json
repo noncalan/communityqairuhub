@@ -6,6 +6,8 @@
     "node": "24.x"
   },
   "scripts": {
+    "postinstall": "node scripts/patch-sonner-csp.mjs",
+    "prebuild": "node scripts/patch-sonner-csp.mjs",
     "dev": "next dev",
     "build": "next build",
     "test:security": "node --experimental-strip-types --test lib/security/*.test.mts",

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { Providers } from "@/components/providers";
 import { getTrustedSiteOrigin } from "@/lib/security/site-origin";
+import "sonner/dist/styles.css";
 import "./globals.css";
 
 // A fresh CSP nonce is forwarded by proxy.ts on every request. Nonces can only
