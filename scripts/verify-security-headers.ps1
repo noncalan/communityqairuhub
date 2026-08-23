@@ -62,6 +62,9 @@ try {
     Status = $response.StatusCode
     CspPresent = [bool]$csp
     CspHasStrictDynamic = $csp.Contains("'strict-dynamic'")
+    CspAllowsPinnedSonnerStyles = $csp.Contains(
+      "'sha256-StEaX+se6YS7pqjzrzMIA0KaX9zF/8zAhvQXZAe5epY='"
+    )
     CspBlocksUnsafeInlineScript = -not $csp.Contains(
       "script-src 'unsafe-inline'"
     )

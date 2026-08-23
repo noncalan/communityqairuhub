@@ -18,6 +18,11 @@ const publicPages = new Set([
   "/verify-email",
 ]);
 
+// Sonner 2.0.8 injects this immutable stylesheet at runtime. Keep the package
+// pinned and allow only the exact CSS bytes instead of weakening style-src.
+const SONNER_STYLE_SHA256 =
+  "'sha256-StEaX+se6YS7pqjzrzMIA0KaX9zF/8zAhvQXZAe5epY='";
+
 function redirectWithCookies(
   url: URL,
   source: NextResponse,
@@ -58,7 +63,7 @@ function createContentSecurityPolicy(nonce: string) {
   return [
     "default-src 'self'",
     `script-src ${scriptSources.join(" ")}`,
-    `style-src 'self' 'nonce-${nonce}'`,
+    `style-src 'self' 'nonce-${nonce}' ${SONNER_STYLE_SHA256}`,
     "style-src-attr 'unsafe-inline'",
     `img-src 'self' blob: data: ${supabaseSources.join(" ")}`.trim(),
     "font-src 'self' data:",
