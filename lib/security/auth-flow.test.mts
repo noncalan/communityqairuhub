@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { authErrorMessage } from "../auth/auth-errors.ts";
+import { isProtectedAppPath } from "../auth/app-routes.ts";
 import {
   PASSWORD_REQUIREMENTS,
   validatePassword,
@@ -60,5 +61,19 @@ describe("authErrorMessage", () => {
       authErrorMessage({ code: "session_expired" }, "reset"),
       /expired/i,
     );
+  });
+});
+
+describe("isProtectedAppPath", () => {
+  it("protects hub and API routes, including dynamic children", () => {
+    assert.equal(isProtectedAppPath("/home"), true);
+    assert.equal(isProtectedAppPath("/projects/live-project"), true);
+    assert.equal(isProtectedAppPath("/api/posts/id/comments"), true);
+    assert.equal(isProtectedAppPath("/u/student"), true);
+  });
+
+  it("lets unknown paths reach the application 404", () => {
+    assert.equal(isProtectedAppPath("/definitely-missing-qairu-route"), false);
+    assert.equal(isProtectedAppPath("/project-not-a-real-root"), false);
   });
 });

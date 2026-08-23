@@ -4,6 +4,7 @@ import { getProfileGate } from "@/lib/data/profiles";
 import { getTrustedSiteOrigin } from "@/lib/security/site-origin";
 import { updateSession } from "@/lib/supabase/proxy";
 import { RECOVERY_COOKIE_NAME } from "@/lib/auth/recovery";
+import { isProtectedAppPath } from "@/lib/auth/app-routes";
 
 const authPages = new Set([
   "/login",
@@ -154,6 +155,7 @@ export async function proxy(request: NextRequest) {
 
   if (!userId) {
     if (publicPages.has(pathname)) return response;
+    if (!isProtectedAppPath(pathname)) return response;
     const loginUrl = new URL("/login", siteOrigin);
     loginUrl.searchParams.set("next", pathname);
     return redirectWithCookies(
