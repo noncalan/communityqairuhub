@@ -4,7 +4,11 @@ import { getProfileGate } from "@/lib/data/profiles";
 import { getTrustedSiteOrigin } from "@/lib/security/site-origin";
 import { updateSession } from "@/lib/supabase/proxy";
 import { RECOVERY_COOKIE_NAME } from "@/lib/auth/recovery";
-import { isProtectedAppPath } from "@/lib/auth/app-routes";
+import {
+  isProtectedAppPath,
+  isProtectedClubManagementPath,
+  isPublicClubBrowsePath,
+} from "@/lib/auth/app-routes";
 
 const authPages = new Set([
   "/login",
@@ -100,6 +104,13 @@ export async function proxy(request: NextRequest) {
   const forwardedHeaders = new Headers(request.headers);
   forwardedHeaders.set("Content-Security-Policy", contentSecurityPolicy);
   forwardedHeaders.set("x-nonce", nonce);
+  const pathname = request.nextUrl.pathname;
+  if (pathname === "/api/telegram/webhook") {
+    return secureResponse(
+      NextResponse.next({ request: { headers: forwardedHeaders } }),
+      contentSecurityPolicy,
+    );
+  }
   const session = await updateSession(request, forwardedHeaders);
   const response = secureResponse(session.response, contentSecurityPolicy);
 
@@ -107,7 +118,6 @@ export async function proxy(request: NextRequest) {
 
   const { supabase, claims } = session;
   if (!supabase) return response;
-  const pathname = request.nextUrl.pathname;
   if (pathname.startsWith("/auth/")) return response;
 
   const userId = typeof claims?.sub === "string" ? claims.sub : null;
@@ -154,8 +164,8 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!userId) {
-    if (publicPages.has(pathname)) return response;
-    if (!isProtectedAppPath(pathname)) return response;
+    if (publicPages.has(pathname) || isPublicClubBrowsePath(pathname)) return response;
+    if (!isProtectedAppPath(pathname) && !isProtectedClubManagementPath(pathname)) return response;
     const loginUrl = new URL("/login", siteOrigin);
     loginUrl.searchParams.set("next", pathname);
     return redirectWithCookies(

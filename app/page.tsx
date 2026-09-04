@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   ArrowRight,
+  Building2,
   CalendarDays,
   FolderKanban,
   Search,
@@ -36,6 +37,9 @@ export default function LandingPage() {
           <Link href="/events" className="hover:text-foreground">
             Events
           </Link>
+          <Link href="/clubs" className="hover:text-foreground">
+            Clubs
+          </Link>
         </nav>
         <div className="ms-auto flex items-center gap-2 md:ms-7">
           <ThemeToggle />
@@ -67,7 +71,7 @@ export default function LandingPage() {
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link href="/sign-in">Sign in</Link>
+                <Link href="/clubs">Browse clubs</Link>
               </Button>
             </div>
             {isLiveMode ? <LiveTrustNote /> : <DemoTrustNote />}
@@ -130,6 +134,12 @@ export default function LandingPage() {
                       : `${events.length} upcoming ways to take part`
                   }
                   href="/events"
+                />
+                <Feature
+                  icon={Building2}
+                  title="Clubs + Telegram"
+                  text="Public club management backed by one shared Supabase source"
+                  href="/clubs"
                 />
               </div>
             </div>

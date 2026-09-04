@@ -11,6 +11,8 @@
     "dev": "next dev",
     "build": "next build",
     "test:security": "node --experimental-strip-types --test lib/security/*.test.mts",
+    "test:prototype": "node --experimental-strip-types --test lib/clubs/*.test.mts lib/telegram/*.test.mts",
+    "test": "npm run test:security && npm run test:prototype",
     "typecheck": "tsc --noEmit",
     "start": "next start",
     "lint": "eslint"

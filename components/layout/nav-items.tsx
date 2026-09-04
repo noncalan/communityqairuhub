@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, BookOpen, CalendarDays, Compass, FolderKanban, Home, MessageSquare, Settings, Sparkles, Users } from "lucide-react";
+import { Bell, BookOpen, Building2, CalendarDays, Compass, FolderKanban, Home, MessageSquare, Settings, Sparkles, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { demoNotifications, useDemoState } from "@/lib/demo/demo-store";
 import { isLiveMode } from "@/lib/app-mode";
@@ -11,6 +11,7 @@ import { useLiveActivityOptional } from "@/components/activity/live-activity-pro
 export const navItems = [
   { href:"/home", label:"Home", icon:Home }, { href:"/people", label:"People", icon:Users },
   { href:"/communities", label:"Communities", icon:Sparkles }, { href:"/projects", label:"Projects", icon:FolderKanban },
+  { href:"/clubs", label:"Clubs Prototype", icon:Building2 },
   { href:"/events", label:"Events", icon:CalendarDays }, { href:"/opportunities", label:"Opportunities", icon:Compass },
   { href:"/resources", label:"Resources", icon:BookOpen },
 ];

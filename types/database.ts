@@ -63,35 +63,50 @@ export type Database = {
       communities: {
         Row: {
           category: string
+          contact: string | null
           created_at: string
           creator_id: string
           description: string
           id: string
+          leader_name: string | null
+          logo_url: string | null
           name: string
+          short_description: string | null
           slug: string
           status: Database["public"]["Enums"]["community_status"]
+          telegram_bot_key: string
           updated_at: string
         }
         Insert: {
           category: string
+          contact?: string | null
           created_at?: string
           creator_id: string
           description: string
           id?: string
+          leader_name?: string | null
+          logo_url?: string | null
           name: string
+          short_description?: string | null
           slug: string
           status?: Database["public"]["Enums"]["community_status"]
+          telegram_bot_key?: string
           updated_at?: string
         }
         Update: {
           category?: string
+          contact?: string | null
           created_at?: string
           creator_id?: string
           description?: string
           id?: string
+          leader_name?: string | null
+          logo_url?: string | null
           name?: string
+          short_description?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["community_status"]
+          telegram_bot_key?: string
           updated_at?: string
         }
         Relationships: [
@@ -100,6 +115,67 @@ export type Database = {
             columns: ["creator_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_telegram_connections: {
+        Row: {
+          community_id: string
+          created_at: string
+          telegram_chat_id: string
+          updated_at: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          telegram_chat_id: string
+          updated_at?: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          telegram_chat_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_telegram_connections_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: true
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_telegram_integrations: {
+        Row: {
+          community_id: string
+          created_at: string
+          group_url: string
+          public_username: string | null
+          updated_at: string
+        }
+        Insert: {
+          community_id: string
+          created_at?: string
+          group_url: string
+          public_username?: string | null
+          updated_at?: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string
+          group_url?: string
+          public_username?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_telegram_integrations_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: true
+            referencedRelation: "communities"
             referencedColumns: ["id"]
           },
         ]
@@ -1107,6 +1183,27 @@ export type Database = {
       }
     }
     Views: {
+      public_clubs: {
+        Row: {
+          category: string | null
+          contact: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          leader_name: string | null
+          logo_url: string | null
+          name: string | null
+          short_description: string | null
+          slug: string | null
+          status: Database["public"]["Enums"]["community_status"] | null
+          telegram_bot_key: string | null
+          telegram_configured: boolean | null
+          telegram_group_url: string | null
+          telegram_public_username: string | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
       post_feed_items: {
         Row: {
           author_avatar_url: string | null
@@ -1174,6 +1271,23 @@ export type Database = {
       }
     }
     Functions: {
+      create_university_club: {
+        Args: {
+          club_category: string
+          club_contact: string | null
+          club_description: string
+          club_leader_name: string
+          club_logo_url: string | null
+          club_name: string
+          club_short_description: string
+          club_slug: string
+          club_status: Database["public"]["Enums"]["community_status"]
+          telegram_chat_id: string | null
+          telegram_group_url: string | null
+          telegram_public_username: string | null
+        }
+        Returns: string
+      }
       create_project: {
         Args: {
           project_category: string
@@ -1244,6 +1358,24 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      update_university_club: {
+        Args: {
+          club_category: string
+          club_contact: string | null
+          club_description: string
+          club_id: string
+          club_leader_name: string
+          club_logo_url: string | null
+          club_name: string
+          club_short_description: string
+          club_slug: string
+          club_status: Database["public"]["Enums"]["community_status"]
+          telegram_chat_id: string | null
+          telegram_group_url: string | null
+          telegram_public_username: string | null
+        }
+        Returns: string
       }
     }
     Enums: {
