@@ -1,6 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
-import type { ValidatedClubInput } from "@/lib/clubs/validation";
+import { getAllowedClubLogoOrigins } from "@/lib/clubs/logo-origins";
+import {
+  firstRelated,
+  managedClubIdentity,
+  parsePublicClubRow,
+  parsePublicClubRows,
+  type InvalidClubContext,
+} from "@/lib/clubs/parser";
+import {
+  type ClubInput,
+  type ValidatedClubInput,
+  validateClubInput,
+} from "@/lib/clubs/validation";
 
 type Client = SupabaseClient<Database>;
 
@@ -28,33 +40,14 @@ export type ManagedClub = Omit<PublicClub, "status"> & {
   telegramChatId: string | null;
 };
 
-type PublicClubRow = Database["public"]["Views"]["public_clubs"]["Row"];
-
 const publicClubColumns = `
   id, slug, name, short_description, description, category, logo_url,
   leader_name, contact, status, telegram_bot_key, telegram_configured,
   telegram_group_url, telegram_public_username, created_at, updated_at
 `;
 
-function mapPublicClub(row: PublicClubRow): PublicClub {
-  return {
-    id: row.id!,
-    slug: row.slug!,
-    name: row.name!,
-    shortDescription: row.short_description!,
-    description: row.description!,
-    category: row.category!,
-    logoUrl: row.logo_url,
-    leaderName: row.leader_name!,
-    contact: row.contact,
-    status: "active",
-    botKey: row.telegram_bot_key!,
-    telegramConfigured: Boolean(row.telegram_configured),
-    telegramGroupUrl: row.telegram_group_url,
-    telegramPublicUsername: row.telegram_public_username,
-    createdAt: row.created_at!,
-    updatedAt: row.updated_at!,
-  };
+function logInvalidClub(context: InvalidClubContext) {
+  console.warn("[clubs] Ignoring invalid club data", context);
 }
 
 export async function listPublicClubs(client: Client) {
@@ -64,7 +57,9 @@ export async function listPublicClubs(client: Client) {
     .order("name")
     .limit(200);
   if (error) throw error;
-  return (data as PublicClubRow[]).map(mapPublicClub);
+  return parsePublicClubRows(data ?? [], {
+    allowedLogoOrigins: getAllowedClubLogoOrigins(),
+  }, logInvalidClub);
 }
 
 export async function getPublicClubBySlug(client: Client, slug: string) {
@@ -74,7 +69,17 @@ export async function getPublicClubBySlug(client: Client, slug: string) {
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw error;
-  return data ? mapPublicClub(data as PublicClubRow) : null;
+  if (!data) return null;
+  const parsed = parsePublicClubRow(data, {
+    allowedLogoOrigins: getAllowedClubLogoOrigins(),
+  });
+  if (parsed.ok) return parsed.club;
+  logInvalidClub({
+    source: "public_clubs",
+    ...managedClubIdentity(data),
+    invalidFields: parsed.invalidFields,
+  });
+  return null;
 }
 
 export async function getPublicClubByBotKey(client: Client, botKey: string) {
@@ -84,15 +89,30 @@ export async function getPublicClubByBotKey(client: Client, botKey: string) {
     .eq("telegram_bot_key", botKey)
     .maybeSingle();
   if (error) throw error;
-  return data ? mapPublicClub(data as PublicClubRow) : null;
+  if (!data) return null;
+  const parsed = parsePublicClubRow(data, {
+    allowedLogoOrigins: getAllowedClubLogoOrigins(),
+  });
+  if (parsed.ok) return parsed.club;
+  logInvalidClub({
+    source: "public_clubs",
+    ...managedClubIdentity(data),
+    invalidFields: parsed.invalidFields,
+  });
+  return null;
 }
 
 type ManagedClubRow = Database["public"]["Tables"]["communities"]["Row"] & {
-  club_telegram_integrations: Array<{
+  club_telegram_integrations: {
     group_url: string;
     public_username: string | null;
-  }>;
-  club_telegram_connections: Array<{ telegram_chat_id: string }>;
+  } | Array<{
+    group_url: string;
+    public_username: string | null;
+  }> | null;
+  club_telegram_connections: { telegram_chat_id: string }
+    | Array<{ telegram_chat_id: string }>
+    | null;
 };
 
 export async function getManagedClubBySlug(
@@ -129,24 +149,50 @@ export async function getManagedClubBySlug(
   }
   if (!canManage) return null;
 
-  const integration = row.club_telegram_integrations[0] ?? null;
-  const connection = row.club_telegram_connections[0] ?? null;
-  return {
-    id: row.id,
-    slug: row.slug,
+  const integration = firstRelated(row.club_telegram_integrations);
+  const connection = firstRelated(row.club_telegram_connections);
+  const input: ClubInput = {
     name: row.name,
+    slug: row.slug,
     shortDescription: row.short_description ?? row.description.slice(0, 180),
     description: row.description,
     category: row.category,
-    logoUrl: row.logo_url,
+    logoUrl: row.logo_url ?? "",
     leaderName: row.leader_name ?? "Club organizer",
-    contact: row.contact,
+    contact: row.contact ?? "",
     status: row.status,
+    telegramGroupUrl: integration?.group_url ?? "",
+    telegramPublicUsername: integration?.public_username ?? "",
+    telegramChatId: connection?.telegram_chat_id ?? "",
+  };
+  const validation = validateClubInput(input, {
+    allowedLogoOrigins: getAllowedClubLogoOrigins(),
+  });
+  if (!validation.ok) {
+    logInvalidClub({
+      source: "managed_club",
+      ...managedClubIdentity(row),
+      invalidFields: Object.keys(validation.fieldErrors).sort(),
+    });
+    return null;
+  }
+  const value = validation.data;
+  return {
+    id: row.id,
+    slug: value.slug,
+    name: value.name,
+    shortDescription: value.shortDescription,
+    description: value.description,
+    category: value.category,
+    logoUrl: value.logoUrl,
+    leaderName: value.leaderName,
+    contact: value.contact,
+    status: value.status,
     botKey: row.telegram_bot_key,
-    telegramConfigured: Boolean(integration),
-    telegramGroupUrl: integration?.group_url ?? null,
-    telegramPublicUsername: integration?.public_username ?? null,
-    telegramChatId: connection?.telegram_chat_id ?? null,
+    telegramConfigured: Boolean(value.telegramGroupUrl),
+    telegramGroupUrl: value.telegramGroupUrl,
+    telegramPublicUsername: value.telegramPublicUsername,
+    telegramChatId: value.telegramChatId,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   } satisfies ManagedClub;

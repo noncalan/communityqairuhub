@@ -35,6 +35,7 @@ export type ClubValidationResult =
   | { ok: false; message: string; fieldErrors: Partial<Record<keyof ClubInput, string>> };
 
 const reservedSlugs = new Set(["new"]);
+const unsafeControlCharacters = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f-\u009f]/u;
 
 function bounded(value: string, min: number, max: number, label: string) {
   const normalized = value.trim().replace(/\s+/g, " ");
@@ -42,6 +43,14 @@ function bounded(value: string, min: number, max: number, label: string) {
     throw new Error(`${label} must be ${min}–${max} characters.`);
   }
   return normalized;
+}
+
+export function normalizeClubCategory(value: string) {
+  const category = bounded(value, 2, 60, "Category");
+  if (unsafeControlCharacters.test(category)) {
+    throw new Error("Category contains unsupported control characters.");
+  }
+  return category;
 }
 
 function normalizeLogoUrl(value: string, allowedOrigins: string[]) {
@@ -122,7 +131,7 @@ export function validateClubInput(
   const description = capture("description", () =>
     bounded(input.description, 8, 600, "Description"),
   );
-  const category = capture("category", () => bounded(input.category, 2, 60, "Category"));
+  const category = capture("category", () => normalizeClubCategory(input.category));
   const logoUrl = capture("logoUrl", () => normalizeLogoUrl(input.logoUrl, options.allowedLogoOrigins));
   const leaderName = capture("leaderName", () => bounded(input.leaderName, 2, 100, "Leader name"));
   const contact = capture("contact", () => normalizeContact(input.contact));

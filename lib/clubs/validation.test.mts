@@ -58,4 +58,19 @@ describe("club input validation", () => {
   it("creates URL-safe slugs", () => {
     assert.equal(slugifyClubName("  QAIRU Robotics & AI  "), "qairu-robotics-ai");
   });
+
+  it("supports arbitrary safe categories and rejects control characters", () => {
+    const arbitrary = validateClubInput({ ...validInput, category: "  coding collective  " }, {
+      allowedLogoOrigins: ["https://assets.qairu.example"],
+    });
+    assert.equal(arbitrary.ok, true);
+    if (arbitrary.ok) assert.equal(arbitrary.data.category, "coding collective");
+
+    const unsafe = validateClubInput({
+      ...validInput,
+      category: `coding${String.fromCharCode(0)}bad`,
+    }, { allowedLogoOrigins: ["https://assets.qairu.example"] });
+    assert.equal(unsafe.ok, false);
+    if (!unsafe.ok) assert.ok(unsafe.fieldErrors.category);
+  });
 });
