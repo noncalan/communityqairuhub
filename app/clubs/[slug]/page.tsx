@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { ClubDetail } from "@/components/clubs/club-detail";
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { getCurrentAuth } from "@/lib/auth/current-user";
 import { getManagedClubBySlug, getPublicClubBySlug } from "@/lib/clubs/data";
 import { createAnonymousServerClient } from "@/lib/supabase/anonymous-server";
 import { getConfiguredTelegramBotUsername } from "@/lib/telegram/config";
@@ -14,7 +14,7 @@ export default async function ClubPage({ params }: { params: Promise<{ slug: str
   const botDeepLink = botUsername && club.telegramConfigured
     ? buildClubBotDeepLink(botUsername, club.botKey)
     : null;
-  const current = await getCurrentUser();
+  const current = await getCurrentAuth();
   const managedClub = current.userId
     ? await getManagedClubBySlug(current.supabase, current.userId, slug)
     : null;

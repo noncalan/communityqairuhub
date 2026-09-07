@@ -96,7 +96,7 @@ export async function getProfileById(client: Client, id: string) {
 export async function getProfileGate(client: Client, id: string) {
   const { data, error } = await client
     .from("profiles")
-    .select("username, onboarding_completed")
+    .select("username, full_name, onboarding_completed")
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;

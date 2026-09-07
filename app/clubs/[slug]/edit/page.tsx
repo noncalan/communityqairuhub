@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { ClubForm } from "@/components/clubs/club-form";
 import { PageHeading } from "@/components/shared/page-heading";
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { getCurrentAuth } from "@/lib/auth/current-user";
 import { getManagedClubBySlug } from "@/lib/clubs/data";
 import { getAllowedClubLogoOrigins } from "@/lib/clubs/logo-origins";
 import type { ClubInput } from "@/lib/clubs/validation";
@@ -9,7 +9,7 @@ import { getConfiguredTelegramBotUsername } from "@/lib/telegram/config";
 
 export default async function EditClubPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const current = await getCurrentUser();
+  const current = await getCurrentAuth();
   if (!current.userId) {
     redirect(`/login?next=${encodeURIComponent(`/clubs/${slug}/edit`)}`);
   }

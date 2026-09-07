@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   ArrowRight,
   Building2,
@@ -12,6 +13,7 @@ import { AvatarMark } from "@/components/shared/avatar-mark";
 import { Brand } from "@/components/shared/brand";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { getCurrentProfileGate } from "@/lib/auth/current-user";
 import { isLiveMode } from "@/lib/app-mode";
 import { events, projects, students } from "@/lib/data/mock";
 
@@ -22,7 +24,11 @@ const navigationItems = [
   [CalendarDays, "Events"],
 ] as const;
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  if (isLiveMode) {
+    const current = await getCurrentProfileGate();
+    if (current.userId && !current.onboardingCompleted) redirect("/onboarding");
+  }
   return (
     <div className="min-h-screen overflow-hidden bg-background">
       <header className="mx-auto flex h-16 max-w-[1180px] items-center px-4 sm:px-6 lg:px-8">

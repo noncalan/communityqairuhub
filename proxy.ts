@@ -1,6 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isLiveMode } from "@/lib/app-mode";
-import { getProfileGate } from "@/lib/data/profiles";
+import { clearVerifiedRequestHeaders } from "@/lib/auth/verified-request";
+import {
+  formatServerTiming,
+  measureServerTiming,
+} from "@/lib/observability/server-timing";
 import { getTrustedSiteOrigin } from "@/lib/security/site-origin";
 import { updateSession } from "@/lib/supabase/proxy";
 import { RECOVERY_COOKIE_NAME } from "@/lib/auth/recovery";
@@ -31,6 +35,8 @@ function redirectWithCookies(
 ) {
   const target = NextResponse.redirect(url);
   source.cookies.getAll().forEach((cookie) => target.cookies.set(cookie));
+  const serverTiming = source.headers.get("Server-Timing");
+  if (serverTiming) target.headers.set("Server-Timing", serverTiming);
   request.cookies.getAll().forEach((cookie) => {
     if (!target.cookies.has(cookie.name)) target.cookies.set(cookie);
   });
@@ -102,6 +108,7 @@ export async function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const contentSecurityPolicy = createContentSecurityPolicy(nonce);
   const forwardedHeaders = new Headers(request.headers);
+  clearVerifiedRequestHeaders(forwardedHeaders);
   forwardedHeaders.set("Content-Security-Policy", contentSecurityPolicy);
   forwardedHeaders.set("x-nonce", nonce);
   const pathname = request.nextUrl.pathname;
@@ -111,8 +118,14 @@ export async function proxy(request: NextRequest) {
       contentSecurityPolicy,
     );
   }
-  const session = await updateSession(request, forwardedHeaders);
+  const { value: session, metric: authTiming } = await measureServerTiming(
+    "proxy-auth",
+    () => updateSession(request, forwardedHeaders),
+    { pathname },
+    "Supabase claims validation",
+  );
   const response = secureResponse(session.response, contentSecurityPolicy);
+  response.headers.append("Server-Timing", formatServerTiming(authTiming));
 
   if (!isLiveMode) return response;
 
@@ -176,25 +189,6 @@ export async function proxy(request: NextRequest) {
     );
   }
 
-  const profile = await getProfileGate(supabase, userId);
-  if (pathname === "/onboarding") {
-    return profile?.onboarding_completed
-      ? redirectWithCookies(
-          new URL("/home", siteOrigin),
-          response,
-          request,
-          contentSecurityPolicy,
-        )
-      : response;
-  }
-  if (!profile?.onboarding_completed && pathname !== "/reset-password") {
-    return redirectWithCookies(
-      new URL("/onboarding", siteOrigin),
-      response,
-      request,
-      contentSecurityPolicy,
-    );
-  }
   if (authPages.has(pathname)) {
     return redirectWithCookies(
       new URL("/home", siteOrigin),

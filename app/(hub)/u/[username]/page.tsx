@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { LiveProfilePage } from "@/components/people/live-profile-page";
 import { ProfilePage } from "@/components/people/profile-page";
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { getCurrentAuth } from "@/lib/auth/current-user";
 import { isLiveMode } from "@/lib/app-mode";
 import { getProfileByUsername } from "@/lib/data/profiles";
 import { getFollowSnapshot } from "@/lib/data/social";
@@ -9,7 +9,7 @@ import { getFollowSnapshot } from "@/lib/data/social";
 export default async function Page({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
   if (!isLiveMode) return <ProfilePage username={username} />;
-  const { supabase, userId } = await getCurrentUser();
+  const { supabase, userId } = await getCurrentAuth();
   const profile = await getProfileByUsername(supabase, username);
   if (!profile) notFound();
   if (!userId) notFound();

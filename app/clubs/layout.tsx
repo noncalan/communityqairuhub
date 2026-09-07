@@ -1,10 +1,17 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { redirect } from "next/navigation";
 import { Brand } from "@/components/shared/brand";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { isLiveMode } from "@/lib/app-mode";
+import { getCurrentProfileGate } from "@/lib/auth/current-user";
 
-export default function ClubsLayout({ children }: { children: React.ReactNode }) {
+export default async function ClubsLayout({ children }: { children: React.ReactNode }) {
+  if (isLiveMode) {
+    const current = await getCurrentProfileGate();
+    if (current.userId && !current.onboardingCompleted) redirect("/onboarding");
+  }
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-background/90 backdrop-blur">

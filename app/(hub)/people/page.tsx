@@ -2,12 +2,12 @@ import { SearchableDirectory } from "@/components/catalog/searchable-directory";
 import { LivePeopleDirectory } from "@/components/people/live-people-directory";
 import { PageHeading } from "@/components/shared/page-heading";
 import { isLiveMode } from "@/lib/app-mode";
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { getCurrentAuth } from "@/lib/auth/current-user";
 import { listCompletedProfiles } from "@/lib/data/profiles";
 import { getFollowSnapshot } from "@/lib/data/social";
 
 export default async function Page() {
-  const live = isLiveMode ? await getCurrentUser() : null;
+  const live = isLiveMode ? await getCurrentAuth() : null;
   const profiles = live ? await listCompletedProfiles(live.supabase) : null;
   const follows = live && live.userId && profiles
     ? await getFollowSnapshot(live.supabase, live.userId, profiles.map((profile) => profile.id))

@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 import { ClubForm } from "@/components/clubs/club-form";
 import { PageHeading } from "@/components/shared/page-heading";
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { getCurrentProfileGate } from "@/lib/auth/current-user";
 import { getAllowedClubLogoOrigins } from "@/lib/clubs/logo-origins";
 import type { ClubInput } from "@/lib/clubs/validation";
 import { getConfiguredTelegramBotUsername } from "@/lib/telegram/config";
 
 export default async function NewClubPage() {
-  const current = await getCurrentUser();
+  const current = await getCurrentProfileGate();
   if (!current.userId) redirect("/login?next=%2Fclubs%2Fnew");
   const initialValue: ClubInput = {
     name: "",
@@ -16,7 +16,7 @@ export default async function NewClubPage() {
     description: "",
     category: "",
     logoUrl: "",
-    leaderName: current.profile?.fullName ?? "",
+    leaderName: current.profileGate?.full_name ?? "",
     contact: current.email ?? "",
     status: "forming",
     telegramGroupUrl: "",

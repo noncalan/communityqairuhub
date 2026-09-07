@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { redirect } from "next/navigation";
+import { getCurrentProfileGate } from "@/lib/auth/current-user";
 import { listPostComments } from "@/lib/data/posts";
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -18,12 +19,15 @@ export async function GET(
       { status: 400, headers: responseHeaders },
     );
   }
-  const { supabase, userId } = await getCurrentUser();
+  const { supabase, userId, onboardingCompleted } = await getCurrentProfileGate();
   if (!userId) {
     return NextResponse.json(
       { error: "Authentication required." },
       { status: 401, headers: responseHeaders },
     );
+  }
+  if (!onboardingCompleted) {
+    redirect("/onboarding");
   }
   try {
     const comments = await listPostComments(supabase, postId);

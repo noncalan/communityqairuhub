@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { getCurrentProfileGate } from "@/lib/auth/current-user";
 import { createClub, updateClub } from "@/lib/clubs/data";
 import { getAllowedClubLogoOrigins } from "@/lib/clubs/logo-origins";
 import {
@@ -45,8 +45,9 @@ function validate(input: ClubInput) {
 }
 
 export async function createClubAction(input: ClubInput): Promise<ClubActionResult> {
-  const current = await getCurrentUser();
+  const current = await getCurrentProfileGate();
   if (!current.userId) return { ok: false, message: "Sign in to create a club." };
+  if (!current.onboardingCompleted) return { ok: false, message: "Complete onboarding before creating a club." };
   const validation = validate(input);
   if (!validation.ok) return validation;
 
@@ -65,8 +66,9 @@ export async function updateClubAction(
   clubId: string,
   input: ClubInput,
 ): Promise<ClubActionResult> {
-  const current = await getCurrentUser();
+  const current = await getCurrentProfileGate();
   if (!current.userId) return { ok: false, message: "Sign in to edit this club." };
+  if (!current.onboardingCompleted) return { ok: false, message: "Complete onboarding before editing a club." };
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clubId)) {
     return { ok: false, message: "The selected club is invalid." };
   }

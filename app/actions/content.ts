@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { getCurrentProfileGate } from "@/lib/auth/current-user";
 import {
   createComment,
   createPost,
@@ -70,8 +70,9 @@ function databaseMessage(error: unknown) {
 }
 
 async function authenticated() {
-  const current = await getCurrentUser();
+  const current = await getCurrentProfileGate();
   if (!current.userId) throw new Error("Your session expired. Sign in again.");
+  if (!current.onboardingCompleted) throw new Error("Complete onboarding before continuing.");
   return { ...current, userId: current.userId };
 }
 

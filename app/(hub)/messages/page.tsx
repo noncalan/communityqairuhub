@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { MessagesPage } from "@/components/demo/messages-page";
 import { LiveMessagesPage } from "@/components/messages/live-messages-page";
 import { isLiveMode } from "@/lib/app-mode";
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { getCurrentAuth } from "@/lib/auth/current-user";
 import { listConversations, listMessages } from "@/lib/data/messages";
 
 export default async function Page({
@@ -14,7 +14,7 @@ export default async function Page({
   if (!isLiveMode) {
     return <Suspense fallback={<div className="page-container">Loading conversations…</div>}><MessagesPage /></Suspense>;
   }
-  const { supabase, userId } = await getCurrentUser();
+  const { supabase, userId } = await getCurrentAuth();
   if (!userId) redirect("/login");
   const conversations = await listConversations(supabase);
   const requested = (await searchParams).conversation;

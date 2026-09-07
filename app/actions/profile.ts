@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { getCurrentAuth } from "@/lib/auth/current-user";
 import {
   saveProfile,
   type ProfileMutationInput,
@@ -42,7 +42,7 @@ async function mutateProfile(
   const validationError = validateProfileInput(input);
   if (validationError) return { ok: false, error: validationError };
 
-  const { supabase, userId } = await getCurrentUser();
+  const { supabase, userId } = await getCurrentAuth();
   if (!userId) return { ok: false, error: "Your session expired. Sign in again." };
 
   try {

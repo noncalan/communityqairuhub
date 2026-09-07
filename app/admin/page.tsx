@@ -1,17 +1,18 @@
 import Link from "next/link";
 import { Construction } from "lucide-react";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Brand } from "@/components/shared/brand";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { getCurrentProfileGate } from "@/lib/auth/current-user";
 import { isLiveMode } from "@/lib/app-mode";
 
 export default async function Page() {
   if (!isLiveMode) notFound();
 
-  const { supabase, userId } = await getCurrentUser();
+  const { supabase, userId, onboardingCompleted } = await getCurrentProfileGate();
   if (!userId) notFound();
+  if (!onboardingCompleted) redirect("/onboarding");
 
   const { data: role, error } = await supabase
     .from("user_roles")

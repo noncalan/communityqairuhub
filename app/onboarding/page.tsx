@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { Brand } from "@/components/shared/brand";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { OnboardingFlow } from "@/components/auth/onboarding-flow";
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { getCurrentProfileGate } from "@/lib/auth/current-user";
 import { isLiveMode } from "@/lib/app-mode";
 import { getProfileReferences, type ReferenceItem } from "@/lib/data/profiles";
 
@@ -12,9 +12,9 @@ const namesToReferences = (names: string[]): ReferenceItem[] =>
 export default async function Page() {
   let references;
   if (isLiveMode) {
-    const { supabase, userId, profile } = await getCurrentUser();
+    const { supabase, userId, onboardingCompleted } = await getCurrentProfileGate();
     if (!userId) redirect("/login");
-    if (profile?.onboardingCompleted) redirect("/home");
+    if (onboardingCompleted) redirect("/home");
     references = await getProfileReferences(supabase);
   } else {
     references = {

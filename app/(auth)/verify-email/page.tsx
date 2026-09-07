@@ -1,12 +1,19 @@
 import Link from "next/link";
 import { MailCheck } from "lucide-react";
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { isLiveMode } from "@/lib/app-mode";
+import { getCurrentProfileGate } from "@/lib/auth/current-user";
 
 export default async function Page({
   searchParams,
 }: {
   searchParams: Promise<{ email?: string }>;
 }) {
+  if (isLiveMode) {
+    const current = await getCurrentProfileGate();
+    if (current.userId && !current.onboardingCompleted) redirect("/onboarding");
+  }
   const { email } = await searchParams;
   return (
     <div className="w-full max-w-sm text-center">
