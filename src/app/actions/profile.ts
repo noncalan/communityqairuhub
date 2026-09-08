@@ -3,11 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentAuth } from "@/lib/auth/current-user";
 import {
+  saveOnboardingProfile,
   saveProfile,
+  type OnboardingProfileInput,
   type ProfileMutationInput,
 } from "@/lib/data/profiles";
 import {
   normalizeUsername,
+  validateOnboardingProfileInput,
   validateProfileInput,
 } from "@/lib/data/profile-validation";
 
@@ -53,20 +56,47 @@ async function mutateProfile(
       completeOnboarding,
     );
     if (!profile) return { ok: false, error: "Profile could not be loaded." };
-    revalidatePath("/home");
-    revalidatePath("/people");
-    revalidatePath("/settings");
-    revalidatePath(`/u/${profile.username}`);
+    revalidateProfilePaths(profile.username);
     return { ok: true, profile };
   } catch (error) {
     return { ok: false, error: messageForDatabaseError(error) };
   }
 }
 
-export async function completeOnboardingAction(input: ProfileMutationInput) {
-  return mutateProfile(input, true);
+export async function completeOnboardingAction(
+  rawInput: OnboardingProfileInput,
+): Promise<ActionResult> {
+  const input: OnboardingProfileInput = {
+    ...rawInput,
+    username: normalizeUsername(rawInput.username),
+    fullName: rawInput.fullName.trim(),
+    bio: rawInput.bio.trim(),
+    interestIds: [...new Set(rawInput.interestIds)],
+    contributionPreferences: [...new Set(rawInput.contributionPreferences)],
+  };
+  const validationError = validateOnboardingProfileInput(input);
+  if (validationError) return { ok: false, error: validationError };
+
+  const { supabase, userId } = await getCurrentAuth();
+  if (!userId) return { ok: false, error: "Your session expired. Sign in again." };
+
+  try {
+    const profile = await saveOnboardingProfile(supabase, userId, input);
+    if (!profile) return { ok: false, error: "Profile could not be loaded." };
+    revalidateProfilePaths(profile.username);
+    return { ok: true, profile };
+  } catch (error) {
+    return { ok: false, error: messageForDatabaseError(error) };
+  }
 }
 
 export async function updateProfileAction(input: ProfileMutationInput) {
   return mutateProfile(input, true);
+}
+
+function revalidateProfilePaths(username: string) {
+  revalidatePath("/home");
+  revalidatePath("/people");
+  revalidatePath("/settings");
+  revalidatePath(`/u/${username}`);
 }

@@ -1,5 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Tables } from "@/types/database";
+import {
+  academicDirectionName,
+  projectInterestNames,
+} from "@/lib/data/onboarding-options";
+import type {
+  AcademicDirection,
+  ContributionPreference,
+  DesiredRole,
+} from "@/lib/data/onboarding-options";
 
 type Client = SupabaseClient<Database>;
 type ProfileRow = Tables<"profiles">;
@@ -20,6 +29,9 @@ export type LiveProfile = {
   programId: string | null;
   program: string;
   academicYear: number;
+  academicDirection: AcademicDirection | null;
+  desiredRole: DesiredRole | null;
+  contributionPreferences: ContributionPreference[];
   interests: ReferenceItem[];
   skills: ReferenceItem[];
   availableForProjects: boolean;
@@ -68,8 +80,15 @@ function mapProfile(row: ProfileQueryRow): LiveProfile {
     bio: row.bio,
     avatarUrl: row.avatar_url,
     programId: row.program_id,
-    program: row.programs?.name ?? "Program not selected",
+    program:
+      academicDirectionName(row.academic_direction as AcademicDirection | null) ??
+      row.programs?.name ??
+      "Direction not selected",
     academicYear: row.academic_year,
+    academicDirection: row.academic_direction as AcademicDirection | null,
+    desiredRole: row.desired_role as DesiredRole | null,
+    contributionPreferences:
+      row.contribution_preferences as ContributionPreference[],
     interests: row.profile_interests.flatMap((item) =>
       item.interests ? [item.interests] : [],
     ),
@@ -97,7 +116,12 @@ export function summarizeProfile(profile: LiveProfile): CurrentUserSummary {
 
 type CurrentUserSummaryRow = Pick<
   ProfileRow,
-  "id" | "username" | "full_name" | "academic_year" | "onboarding_completed"
+  | "id"
+  | "username"
+  | "full_name"
+  | "academic_direction"
+  | "academic_year"
+  | "onboarding_completed"
 > & {
   programs: { name: string } | null;
 };
@@ -105,7 +129,7 @@ type CurrentUserSummaryRow = Pick<
 export async function getCurrentUserSummary(client: Client, id: string) {
   const { data, error } = await client
     .from("profiles")
-    .select("id, username, full_name, academic_year, onboarding_completed, programs(name)")
+    .select("id, username, full_name, academic_direction, academic_year, onboarding_completed, programs(name)")
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
@@ -115,7 +139,10 @@ export async function getCurrentUserSummary(client: Client, id: string) {
     id: row.id,
     username: row.username,
     fullName: row.full_name,
-    program: row.programs?.name ?? "Program not selected",
+    program:
+      academicDirectionName(row.academic_direction as AcademicDirection | null) ??
+      row.programs?.name ??
+      "Direction not selected",
     academicYear: row.academic_year,
     onboardingCompleted: row.onboarding_completed,
   } satisfies CurrentUserSummary;
@@ -136,6 +163,24 @@ export async function getProfileReferences(
     interests: interests.data ?? [],
     skills: skills.data ?? [],
   };
+}
+
+export async function getOnboardingInterests(client: Client) {
+  const { data, error } = await client
+    .from("interests")
+    .select("id, name")
+    .in("name", [...projectInterestNames]);
+  if (error) throw error;
+
+  const byName = new Map((data ?? []).map((item) => [item.name, item]));
+  const orderedInterests = projectInterestNames.flatMap((name) => {
+    const item = byName.get(name);
+    return item ? [item] : [];
+  });
+  if (orderedInterests.length !== projectInterestNames.length) {
+    throw new Error("Onboarding project interests are not fully configured.");
+  }
+  return orderedInterests;
 }
 
 export async function getProfileById(client: Client, id: string) {
@@ -176,7 +221,8 @@ export async function listCompletedProfiles(client: Client) {
   const { data, error } = await client
     .from("profiles")
     .select(`
-      id, username, full_name, bio, academic_year, available_for_projects,
+      id, username, full_name, bio, academic_direction, academic_year,
+      available_for_projects,
       programs(name),
       profile_interests(interests(id, name)),
       profile_skills(skills(id, name))
@@ -191,6 +237,7 @@ export async function listCompletedProfiles(client: Client) {
     username: string;
     full_name: string;
     bio: string;
+    academic_direction: string | null;
     academic_year: number;
     available_for_projects: boolean;
     programs: { name: string } | null;
@@ -201,7 +248,10 @@ export async function listCompletedProfiles(client: Client) {
     username: row.username,
     fullName: row.full_name,
     bio: row.bio,
-    program: row.programs?.name ?? "Program not selected",
+    program:
+      academicDirectionName(row.academic_direction as AcademicDirection | null) ??
+      row.programs?.name ??
+      "Direction not selected",
     academicYear: row.academic_year,
     interests: row.profile_interests.flatMap((item) => item.interests ? [item.interests] : []),
     skills: row.profile_skills.flatMap((item) => item.skills ? [item.skills] : []),
@@ -222,6 +272,16 @@ export type ProfileMutationInput = {
   profileVisibility: "campus" | "private";
 };
 
+export type OnboardingProfileInput = {
+  username: string;
+  fullName: string;
+  bio: string;
+  academicDirection: AcademicDirection;
+  desiredRole: DesiredRole;
+  interestIds: string[];
+  contributionPreferences: ContributionPreference[];
+};
+
 export async function saveProfile(
   client: Client,
   userId: string,
@@ -240,6 +300,25 @@ export async function saveProfile(
     profile_onboarding_completed: completeOnboarding,
     interest_ids: input.interestIds,
     skill_ids: input.skillIds,
+  });
+  if (error) throw error;
+
+  return getProfileById(client, userId);
+}
+
+export async function saveOnboardingProfile(
+  client: Client,
+  userId: string,
+  input: OnboardingProfileInput,
+) {
+  const { error } = await client.rpc("complete_my_onboarding", {
+    profile_username: input.username,
+    profile_full_name: input.fullName,
+    profile_bio: input.bio,
+    profile_academic_direction: input.academicDirection,
+    profile_desired_role: input.desiredRole,
+    profile_contribution_preferences: input.contributionPreferences,
+    interest_ids: input.interestIds,
   });
   if (error) throw error;
 

@@ -754,11 +754,14 @@ export type Database = {
       }
       profiles: {
         Row: {
+          academic_direction: string | null
           academic_year: number
           available_for_projects: boolean
           avatar_url: string | null
           bio: string
+          contribution_preferences: string[]
           created_at: string
+          desired_role: string | null
           full_name: string
           id: string
           onboarding_completed: boolean
@@ -769,11 +772,14 @@ export type Database = {
           username: string
         }
         Insert: {
+          academic_direction?: string | null
           academic_year: number
           available_for_projects?: boolean
           avatar_url?: string | null
           bio?: string
+          contribution_preferences?: string[]
           created_at?: string
+          desired_role?: string | null
           full_name: string
           id: string
           onboarding_completed?: boolean
@@ -784,11 +790,14 @@ export type Database = {
           username: string
         }
         Update: {
+          academic_direction?: string | null
           academic_year?: number
           available_for_projects?: boolean
           avatar_url?: string | null
           bio?: string
+          contribution_preferences?: string[]
           created_at?: string
+          desired_role?: string | null
           full_name?: string
           id?: string
           onboarding_completed?: boolean
@@ -1325,6 +1334,18 @@ export type Database = {
       mark_conversation_read: {
         Args: { target_conversation_id: string }
         Returns: string
+      }
+      complete_my_onboarding: {
+        Args: {
+          interest_ids: string[]
+          profile_academic_direction: string
+          profile_bio: string
+          profile_contribution_preferences: string[]
+          profile_desired_role: string
+          profile_full_name: string
+          profile_username: string
+        }
+        Returns: Database["public"]["Tables"]["profiles"]["Row"]
       }
       save_my_profile: {
         Args: {

@@ -4,52 +4,21 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { OnboardingFlow } from "@/components/auth/onboarding-flow";
 import { getCurrentProfileGate } from "@/lib/auth/current-user";
 import { isLiveMode } from "@/lib/app-mode";
-import { getProfileReferences, type ReferenceItem } from "@/lib/data/profiles";
+import { projectInterestNames } from "@/lib/data/onboarding-options";
+import { getOnboardingInterests, type ReferenceItem } from "@/lib/data/profiles";
 
 const namesToReferences = (names: string[]): ReferenceItem[] =>
   names.map((name) => ({ id: name, name }));
 
 export default async function Page() {
-  let references;
+  let interests;
   if (isLiveMode) {
     const { supabase, userId, onboardingCompleted } = await getCurrentProfileGate();
     if (!userId) redirect("/login");
     if (onboardingCompleted) redirect("/home");
-    references = await getProfileReferences(supabase);
+    interests = await getOnboardingInterests(supabase);
   } else {
-    references = {
-      programs: namesToReferences([
-        "Artificial Intelligence",
-        "Business",
-        "Computer Science",
-        "Data Science",
-        "Product Management",
-      ]),
-      interests: namesToReferences([
-        "Artificial Intelligence",
-        "Startups",
-        "Design",
-        "Robotics",
-        "Film",
-        "Football",
-        "Data",
-        "Open source",
-        "Debate",
-        "Climate",
-      ]),
-      skills: namesToReferences([
-        "Python",
-        "JavaScript",
-        "Machine Learning",
-        "UI/UX",
-        "Marketing",
-        "Finance",
-        "Video",
-        "Robotics",
-        "Research",
-        "Writing",
-      ]),
-    };
+    interests = namesToReferences([...projectInterestNames]);
   }
 
   return (
@@ -59,7 +28,7 @@ export default async function Page() {
         <div className="ms-auto"><ThemeToggle /></div>
       </header>
       <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl items-center justify-center px-5 py-12">
-        <OnboardingFlow references={references} />
+        <OnboardingFlow interests={interests} />
       </main>
     </div>
   );

@@ -17,7 +17,7 @@ const tableByResource: Record<CoreResource, TableName> = {
 // Every selection is an explicit response allowlist. In particular,
 // communities.telegram_bot_key must never cross this API boundary.
 const selectByResource: Record<CoreResource, string> = {
-  users: "id, username, full_name, bio, avatar_url, program_id, academic_year, available_for_projects, open_to_collaboration, profile_visibility, onboarding_completed, created_at, updated_at",
+  users: "id, username, full_name, bio, avatar_url, program_id, academic_year, academic_direction, desired_role, contribution_preferences, available_for_projects, open_to_collaboration, profile_visibility, onboarding_completed, created_at, updated_at",
   events: "id, slug, title, description, category, starts_at, ends_at, location, capacity, organizer_id, created_at, updated_at",
   communities: "id, slug, name, short_description, description, category, logo_url, leader_name, contact, status, creator_id, created_at, updated_at",
   projects: "id, slug, name, tagline, description, category, status, creator_id, created_at, updated_at",
@@ -61,7 +61,7 @@ export async function createCoreResource(
   let result;
   switch (resource) {
     case "users":
-      result = await client.from("profiles").insert(payload as TablesInsert<"profiles">).select(selectByResource.users).single();
+      result = await client.from("profiles").insert(payload as unknown as TablesInsert<"profiles">).select(selectByResource.users).single();
       break;
     case "events":
       result = await client.from("events").insert(payload as TablesInsert<"events">).select(selectByResource.events).single();
