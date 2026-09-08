@@ -17,7 +17,7 @@ This pass targets authenticated client-side navigation latency without changing 
 
 ### 1. Proxy auth is now database-free
 
-- `proxy.ts` no longer imports or calls `getProfileGate()`.
+- `src/proxy.ts` no longer imports or calls `getProfileGate()`.
 - Proxy performs Supabase `auth.getClaims()` only, then applies the existing session, recovery-flow, public/protected-route, and auth-page redirects.
 - The validated user ID and email are forwarded to the downstream request through internal headers.
 - Incoming copies of those internal headers are always removed before validated values are written, so a browser cannot use them to impersonate another user.

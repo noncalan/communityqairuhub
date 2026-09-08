@@ -25,11 +25,24 @@ import { authService } from "@/lib/auth/service";
 import { useCurrentUser } from "@/lib/auth/current-user-provider";
 import { useDemoState } from "@/lib/demo/demo-store";
 
+type ShellAccount = {
+  username: string;
+  fullName: string;
+  program?: string;
+  academicYear?: number;
+};
+
 function initials(name: string) {
   return name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  liveAccount,
+}: {
+  children: React.ReactNode;
+  liveAccount?: ShellAccount | null;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <div className="min-h-screen bg-background">
@@ -37,7 +50,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="px-5 py-5"><ClientBrand /></div>
         <div className="px-3"><CommandSearch /></div>
         <div className="flex-1 overflow-y-auto px-3 py-5"><NavItems /></div>
-        {isLiveMode ? <LiveAccountMenu /> : <DemoAccountCard />}
+        {isLiveMode ? <LiveAccountArea account={liveAccount} /> : <DemoAccountCard />}
       </aside>
       <header className="sticky top-0 z-20 flex h-14 items-center border-b bg-background/90 px-4 backdrop-blur lg:ms-[220px] lg:px-7">
         <div className="lg:hidden">
@@ -58,7 +71,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="ms-auto flex items-center gap-1">
           <div className="sm:hidden"><CommandSearch compact listenShortcut={false} /></div>
           <ThemeToggle />
-          {isLiveMode ? <LiveAccountMenu compact /> : <DemoAccountMenu />}
+          {isLiveMode ? <LiveAccountArea account={liveAccount} compact /> : <DemoAccountMenu />}
         </div>
       </header>
       <main className="lg:ms-[220px]">{children}</main>
@@ -88,9 +101,31 @@ function DemoAccountMenu() {
   );
 }
 
-function LiveAccountMenu({ compact = false }: { compact?: boolean }) {
-  const router = useRouter();
+function LiveAccountArea({
+  account,
+  compact = false,
+}: {
+  account?: ShellAccount | null;
+  compact?: boolean;
+}) {
+  if (account === null) return null;
+  if (account) return <LiveAccountMenu profile={account} compact={compact} />;
+  return <ContextLiveAccountMenu compact={compact} />;
+}
+
+function ContextLiveAccountMenu({ compact = false }: { compact?: boolean }) {
   const { profile } = useCurrentUser();
+  return <LiveAccountMenu profile={profile} compact={compact} />;
+}
+
+function LiveAccountMenu({
+  profile,
+  compact = false,
+}: {
+  profile: ShellAccount;
+  compact?: boolean;
+}) {
+  const router = useRouter();
   async function signOut() {
     const { error } = await authService.signOut();
     if (error) return toast.error("Could not sign out. Please try again.");
@@ -109,7 +144,11 @@ function LiveAccountMenu({ compact = false }: { compact?: boolean }) {
             <AvatarMark initials={initials(profile.fullName)} color="#4f5fc4" className="size-8" />
             <span className="min-w-0">
               <span className="block truncate text-xs font-semibold">{profile.fullName}</span>
-              <span className="block truncate text-[11px] text-muted-foreground">{profile.program} · Year {profile.academicYear}</span>
+              <span className="block truncate text-[11px] text-muted-foreground">
+                {profile.program && profile.academicYear
+                  ? `${profile.program} · Year ${profile.academicYear}`
+                  : `@${profile.username}`}
+              </span>
             </span>
           </button>
         )}

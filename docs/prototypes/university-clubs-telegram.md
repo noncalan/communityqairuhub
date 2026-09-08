@@ -89,12 +89,12 @@ Routes:
 
 Important modules:
 
-- `components/clubs/club-directory.tsx`: responsive public filtering and club cards;
-- `components/clubs/club-detail.tsx`: club information and truthful Telegram state;
-- `components/clubs/club-form.tsx`: shared create/edit form and client validation;
-- `lib/clubs/validation.ts`: reusable input contract;
-- `lib/clubs/data.ts`: Supabase data access and transaction RPC calls;
-- `app/actions/clubs.ts`: authentication, server validation, safe errors, and revalidation.
+- `src/components/clubs/club-directory.tsx`: responsive public filtering and club cards;
+- `src/components/clubs/club-detail.tsx`: club information and truthful Telegram state;
+- `src/components/clubs/club-form.tsx`: shared create/edit form and client validation;
+- `src/lib/clubs/validation.ts`: reusable input contract;
+- `src/lib/clubs/data.ts`: Supabase data access and transaction RPC calls;
+- `src/app/actions/clubs.ts`: authentication, server validation, safe errors, and revalidation.
 
 Loading, empty, missing, and backend error states are explicit. The public error state states that demo data was not substituted.
 
@@ -102,13 +102,13 @@ Loading, empty, missing, and backend error states are explicit. The public error
 
 Relevant modules:
 
-- `lib/telegram/validation.ts`: group URLs, usernames, chat IDs, stable payloads, and bot deep links;
-- `lib/telegram/bot.ts`: update parsing and club response composition, with injected data/API boundaries;
-- `lib/telegram/client.ts`: server-only Bot API `sendMessage` call;
-- `lib/telegram/webhook-security.ts`: secret configuration and timing-safe comparison;
-- `lib/telegram/rate-limit.ts`: bounded per-instance webhook throttling;
-- `app/api/telegram/webhook/route.ts`: HTTP boundary;
-- `lib/supabase/anonymous-server.ts`: stateless publishable-key Supabase client for public bot lookup.
+- `src/lib/telegram/validation.ts`: group URLs, usernames, chat IDs, stable payloads, and bot deep links;
+- `src/lib/telegram/bot.ts`: update parsing and club response composition, with injected data/API boundaries;
+- `src/lib/telegram/client.ts`: server-only Bot API `sendMessage` call;
+- `src/lib/telegram/webhook-security.ts`: secret configuration and timing-safe comparison;
+- `src/lib/telegram/rate-limit.ts`: bounded per-instance webhook throttling;
+- `src/app/api/telegram/webhook/route.ts`: HTTP boundary;
+- `src/lib/supabase/anonymous-server.ts`: stateless publishable-key Supabase client for public bot lookup.
 
 The website creates a deep link like:
 
@@ -221,12 +221,12 @@ Telegram then sends the configured secret in `X-Telegram-Bot-Api-Secret-Token`. 
 
 For a university extraction, copy these independent units:
 
-1. `lib/clubs/validation.ts` and the relevant form fields for the club contract.
-2. `lib/clubs/data.ts` and `app/actions/clubs.ts` for authenticated Supabase writes.
-3. `lib/telegram/` for URL/deep-link validation, webhook logic, and Bot API boundary.
-4. `app/api/telegram/webhook/route.ts` for the deployable webhook.
+1. `src/lib/clubs/validation.ts` and the relevant form fields for the club contract.
+2. `src/lib/clubs/data.ts` and `src/app/actions/clubs.ts` for authenticated Supabase writes.
+3. `src/lib/telegram/` for URL/deep-link validation, webhook logic, and Bot API boundary.
+4. `src/app/api/telegram/webhook/route.ts` for the deployable webhook.
 5. The prototype migration, adapting `communities` to the university's canonical club table.
-6. `components/clubs/` and `app/clubs/` if the UI is wanted.
+6. `src/components/clubs/` and `src/app/clubs/` if the UI is wanted.
 
 The bot handler depends on injected `findClubByBotKey` and `sendMessage` functions. It can therefore be moved to another service without importing QAIRU UI code.
 

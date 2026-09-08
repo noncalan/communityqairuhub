@@ -1,8 +1,10 @@
-# Community — Current State
+# QAIRU Hub — MVP status
 
 Дата аудита: 2026-09-07  
 Источник требований: `community-product-spec.md`, разделы 6, 7.1 и 7.2.  
 Источник истины по реализации: routes, components, actions, data layer и Supabase migrations; README в оценку не засчитывался.
+
+> Примечание по репозиторию: файл `community-product-spec.md`, использованный как источник требований для этого аудита, сейчас отсутствует. До его восстановления этот документ является снимком оценки, но не заменяет исходную продуктовую спецификацию.
 
 ## MVP summary
 
@@ -12,8 +14,8 @@ Overall: **~43%**
 
 | Block | Status | What exists | Main gap |
 |---|---:|---|---|
-| Auth + student verification | 50% | Email/password, confirmation screen and callback, recovery, logout, SSR session gates: `components/auth/auth-form.tsx`, `lib/auth/service.ts`, `app/auth/*`, `proxy.ts`. | Нет проверки университетского домена/статуса verified student и ограниченного режима; нет привязки Telegram/GitHub; нет logout со всех устройств. |
-| Onboarding | 50% | Рабочий **5-step** flow, справочники skills/interests/programs и атомарное сохранение профиля: `/onboarding`, `components/auth/onboarding-flow.tsx`, `completeOnboardingAction`, `save_my_profile`. | Spec требует 3 шага; нет hours/week, `/onboarding/next` с первым действием и 7-day follow-up/list «новички без задачи». |
+| Auth + student verification | 50% | Email/password, confirmation screen and callback, recovery, logout, SSR session gates: `src/components/auth/auth-form.tsx`, `src/lib/auth/service.ts`, `src/app/auth/*`, `src/proxy.ts`. | Нет проверки университетского домена/статуса verified student и ограниченного режима; нет привязки Telegram/GitHub; нет logout со всех устройств. |
+| Onboarding | 50% | Рабочий **5-step** flow, справочники skills/interests/programs и атомарное сохранение профиля: `/onboarding`, `src/components/auth/onboarding-flow.tsx`, `completeOnboardingAction`, `save_my_profile`. | Spec требует 3 шага; нет hours/week, `/onboarding/next` с первым действием и 7-day follow-up/list «новички без задачи». |
 | Profiles / people directory | 75% | Live profile и каталог: `/people`, `/u/[username]`, `profiles`, `profile_skills`, `profile_interests`; поиск и filters по program/skill/interest; availability, collaboration и `campus/private`. | Нет hours/week, languages и GitHub/Telegram/portfolio links; нет автоматической истории projects/events/badges; фильтры и privacy-модель уже, чем в spec. |
 | Team finder | 75% | Открытые роли, application с сообщением, accept/reject владельцем и автоматическое добавление в team: `project_roles`, `project_applications`, `project_members`, `applyToProjectAction`, `reviewProjectApplicationAction`. | Нет отдельного `/find` и двух сторон «ищу людей/проект»; у роли нет skill/hours/deadline/experience; нет причины отказа, рекомендаций и one-off help. |
 | Projects / roles / applications | 50% | Создание проекта со status, stack, roles; detail, team, applications и saves: `/projects`, `/projects/[slug]`, `LiveProjectDialog`, `LiveProjectDetail`, `create_project` RPC. | `/projects*` закрыты auth вместо public showcase; нет repository URL, semester goal/definition of done; нет project updates/demo application/status history и нужных spec-статусов. |

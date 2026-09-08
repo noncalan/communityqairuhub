@@ -9,7 +9,7 @@ This pass optimizes for immediate visual feedback and early streaming, not for a
 
 - Authenticated links use the supported Next.js `Link` component again. Default partial prefetch is enabled so `loading.tsx` can be available before a click.
 - `useLinkStatus()` shows a top-edge pending indicator while a navigation is waiting.
-- `app/(hub)/loading.tsx` covers every route in the authenticated route group; `app/clubs/loading.tsx` covers the separate Clubs tree.
+- `src/app/(hub)/loading.tsx` covers every route in the authenticated route group; `src/app/clubs/loading.tsx` covers the separate Clubs tree.
 - Hub and Clubs access checks now sit inside Suspense boundaries. Their protected children still wait for the existing checks, while a non-sensitive shell can stream immediately.
 - Main list pages render their heading/shell first and stream live data inside route-local Suspense boundaries.
 - Home no longer fetches the current profile again. Its greeting uses the profile already provided by the persistent Hub layout.

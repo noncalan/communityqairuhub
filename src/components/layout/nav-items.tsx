@@ -11,7 +11,7 @@ import { ClientNavLink } from "@/components/shared/client-nav-link";
 export const navItems = [
   { href:"/home", label:"Home", icon:Home }, { href:"/people", label:"People", icon:Users },
   { href:"/communities", label:"Communities", icon:Sparkles }, { href:"/projects", label:"Projects", icon:FolderKanban },
-  { href:"/clubs", label:"Clubs Prototype", icon:Building2 },
+  { href:"/clubs", label:"Clubs", icon:Building2 },
   { href:"/events", label:"Events", icon:CalendarDays }, { href:"/opportunities", label:"Opportunities", icon:Compass },
   { href:"/resources", label:"Resources", icon:BookOpen },
 ];

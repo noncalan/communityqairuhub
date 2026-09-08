@@ -25,7 +25,7 @@ for (const file of files) {
   const newline = match[1];
   const replacement = [
     "function __insertCSS(code) {",
-    `  // ${marker}: CSS is imported by app/layout.tsx for strict CSP.`,
+    `  // ${marker}: CSS is imported by src/app/layout.tsx for strict CSP.`,
     "  return",
     "",
   ].join(newline);
