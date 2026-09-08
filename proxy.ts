@@ -9,6 +9,7 @@ import { getTrustedSiteOrigin } from "@/lib/security/site-origin";
 import { updateSession } from "@/lib/supabase/proxy";
 import { RECOVERY_COOKIE_NAME } from "@/lib/auth/recovery";
 import {
+  isCoreApiPath,
   isProtectedAppPath,
   isProtectedClubManagementPath,
   isPublicClubBrowsePath,
@@ -112,7 +113,7 @@ export async function proxy(request: NextRequest) {
   forwardedHeaders.set("Content-Security-Policy", contentSecurityPolicy);
   forwardedHeaders.set("x-nonce", nonce);
   const pathname = request.nextUrl.pathname;
-  if (pathname === "/api/telegram/webhook") {
+  if (pathname === "/api/telegram/webhook" || isCoreApiPath(pathname)) {
     return secureResponse(
       NextResponse.next({ request: { headers: forwardedHeaders } }),
       contentSecurityPolicy,

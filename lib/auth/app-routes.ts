@@ -21,6 +21,10 @@ export function isProtectedAppPath(pathname: string) {
   );
 }
 
+export function isCoreApiPath(pathname: string) {
+  return pathname === "/api/core" || pathname.startsWith("/api/core/");
+}
+
 export function isPublicClubBrowsePath(pathname: string) {
   if (pathname === "/clubs") return true;
   const segments = pathname.split("/").filter(Boolean);

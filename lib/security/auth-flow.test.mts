@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { authErrorMessage } from "../auth/auth-errors.ts";
-import { isProtectedAppPath } from "../auth/app-routes.ts";
+import { isCoreApiPath, isProtectedAppPath } from "../auth/app-routes.ts";
 import {
   PASSWORD_REQUIREMENTS,
   validatePassword,
@@ -75,5 +75,14 @@ describe("isProtectedAppPath", () => {
   it("lets unknown paths reach the application 404", () => {
     assert.equal(isProtectedAppPath("/definitely-missing-qairu-route"), false);
     assert.equal(isProtectedAppPath("/project-not-a-real-root"), false);
+  });
+});
+
+describe("isCoreApiPath", () => {
+  it("bypasses user-session redirects only for the Core API namespace", () => {
+    assert.equal(isCoreApiPath("/api/core/users"), true);
+    assert.equal(isCoreApiPath("/api/core/events/id"), true);
+    assert.equal(isCoreApiPath("/api/posts/id/comments"), false);
+    assert.equal(isCoreApiPath("/api/core-malicious/users"), false);
   });
 });
