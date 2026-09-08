@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { ArrowUpRight, Bot, Search, Send } from "lucide-react";
 import { useDeferredValue, useMemo, useState } from "react";
 import { ClubLogo } from "@/components/clubs/club-logo";
+import { ClientNavLink } from "@/components/shared/client-nav-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,9 +81,9 @@ export function ClubDirectory({
                       </Badge>
                     </div>
                     <h2 className="mt-2 text-xl font-semibold tracking-[-0.035em]">
-                      <Link href={`/clubs/${club.slug}`} className="hover:text-primary">
+                      <ClientNavLink href={`/clubs/${club.slug}`} className="hover:text-primary">
                         {club.name}
-                      </Link>
+                      </ClientNavLink>
                     </h2>
                   </div>
                 </div>
@@ -92,9 +92,9 @@ export function ClubDirectory({
                 </p>
                 <div className="mt-auto flex items-center gap-2 pt-6">
                   <Button variant="outline" className="flex-1" asChild>
-                    <Link href={`/clubs/${club.slug}`}>
+                    <ClientNavLink href={`/clubs/${club.slug}`}>
                       View club <ArrowUpRight className="size-4" />
-                    </Link>
+                    </ClientNavLink>
                   </Button>
                   {botLink ? (
                     <Button size="icon" asChild aria-label={`Open ${club.name} in Telegram`}>

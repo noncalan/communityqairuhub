@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { ArrowUpRight, BookOpen, Bookmark, FileText, Link2, Plus } from "lucide-react";
 import { useDeferredValue, useRef, useState } from "react";
 import { toast } from "sonner";
 import { createResourceAction, setResourceSavedAction } from "@/app/actions/content";
+import { ClientNavLink } from "@/components/shared/client-nav-link";
 import { PageHeading } from "@/components/shared/page-heading";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -76,10 +76,10 @@ function ResourceRow({ resource }: { resource: LiveResource }) {
   const Icon = typeIcons[resource.type];
   return (
     <article className="grid gap-4 border-b p-5 last:border-0 md:grid-cols-[minmax(0,1fr)_150px_130px] md:items-center">
-      <Link href={`/resources/${resource.id}`} className="group flex min-w-0 gap-3">
+      <ClientNavLink href={`/resources/${resource.id}`} className="group flex min-w-0 gap-3">
         <span className="grid size-9 shrink-0 place-items-center rounded-md bg-primary/10 text-primary"><Icon className="size-4" /></span>
         <div className="min-w-0"><h2 className="text-sm font-semibold group-hover:text-primary">{resource.title}</h2><p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">{resource.description}</p><p className="mt-2 text-[11px] text-muted-foreground">By {resource.author.fullName} · {resource.type}</p></div>
-      </Link>
+      </ClientNavLink>
       <Badge variant="secondary" className="w-fit">{resource.category}</Badge>
       <ResourceSaveButton resourceId={resource.id} initialSaved={resource.isSaved} initialCount={resource.saveCount} />
     </article>
@@ -179,7 +179,7 @@ export function LiveResourceDetail({ resource }: { resource: LiveResource }) {
   const Icon = typeIcons[resource.type];
   return (
     <div className="page-container max-w-5xl">
-      <Link href="/resources" className="text-xs text-muted-foreground hover:text-foreground">← All resources</Link>
+      <ClientNavLink href="/resources" className="text-xs text-muted-foreground hover:text-foreground">← All resources</ClientNavLink>
       <div className="mt-6 grid gap-10 xl:grid-cols-[minmax(0,1fr)_260px]">
         <main>
           <div className="flex items-center gap-2"><span className="grid size-9 place-items-center rounded-md bg-primary/10 text-primary"><Icon className="size-4" /></span><Badge variant="secondary" className="capitalize">{resource.type}</Badge><Badge variant="outline">{resource.category}</Badge></div>
@@ -188,7 +188,7 @@ export function LiveResourceDetail({ resource }: { resource: LiveResource }) {
           {!!resource.tags.length && <div className="mt-7 flex flex-wrap gap-2">{resource.tags.map((tag) => <Badge key={tag} variant="outline">{tag}</Badge>)}</div>}
         </main>
         <aside className="space-y-4">
-          <section className="surface rounded-lg p-5"><p className="eyebrow">Shared by</p><Link href={`/u/${resource.author.username}`} className="mt-3 block text-sm font-semibold hover:text-primary">{resource.author.fullName}</Link><p className="mt-1 text-xs text-muted-foreground">@{resource.author.username}</p></section>
+          <section className="surface rounded-lg p-5"><p className="eyebrow">Shared by</p><ClientNavLink href={`/u/${resource.author.username}`} className="mt-3 block text-sm font-semibold hover:text-primary">{resource.author.fullName}</ClientNavLink><p className="mt-1 text-xs text-muted-foreground">@{resource.author.username}</p></section>
           <ResourceSaveButton resourceId={resource.id} initialSaved={resource.isSaved} initialCount={resource.saveCount} showCount={false} />
           {resource.externalUrl && <Button asChild className="w-full"><a href={resource.externalUrl} target="_blank" rel="noopener noreferrer">Open source<ArrowUpRight className="size-4" /></a></Button>}
         </aside>

@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bot, ExternalLink, Save, Send } from "lucide-react";
 import { useState, useTransition } from "react";
 import { createClubAction, updateClubAction } from "@/app/actions/clubs";
+import { ClientNavLink } from "@/components/shared/client-nav-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,7 +65,6 @@ export function ClubForm({
         return;
       }
       router.push(values.status === "active" ? `/clubs/${result.slug}` : `/clubs/${result.slug}/edit`);
-      router.refresh();
     });
   }
 
@@ -284,7 +283,7 @@ export function ClubForm({
             {pending ? "Saving…" : mode === "create" ? "Create club" : "Save changes"}
           </Button>
           <Button type="button" variant="ghost" asChild>
-            <Link href={mode === "edit" ? `/clubs/${initialValue.slug}` : "/clubs"}>Cancel</Link>
+            <ClientNavLink href={mode === "edit" ? `/clubs/${initialValue.slug}` : "/clubs"}>Cancel</ClientNavLink>
           </Button>
         </div>
       </aside>

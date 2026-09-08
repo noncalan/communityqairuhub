@@ -53,7 +53,6 @@ export function LiveCommunityDialog() {
       form.reset();
       setOpen(false);
       router.push(`/communities/${result.data.slug}`);
-      router.refresh();
     });
   }
 
@@ -107,7 +106,6 @@ export function LiveProjectDialog({ compact = false }: { compact?: boolean }) {
       form.reset();
       setOpen(false);
       router.push(`/projects/${result.data.slug}`);
-      router.refresh();
     });
   }
 
@@ -163,7 +161,6 @@ export function LiveEventDialog({ dark = false }: { dark?: boolean }) {
       form.reset();
       setOpen(false);
       router.push(`/events/${result.data.slug}`);
-      router.refresh();
     });
   }
 

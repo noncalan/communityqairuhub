@@ -59,13 +59,13 @@ export function LiveNotificationsPage({ initialNotifications }: { initialNotific
         item.id === notification.id ? { ...item, readAt: markedAt } : item,
       ));
     }
+    router.push(notification.href);
     startTransition(async () => {
       if (!notification.readAt) {
         const result = await markNotificationReadAction({ notificationId: notification.id });
         if (!result.ok) toast.error(result.error);
         await refreshCounts();
       }
-      router.push(notification.href);
     });
   }
 

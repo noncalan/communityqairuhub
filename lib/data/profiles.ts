@@ -29,6 +29,24 @@ export type LiveProfile = {
   updatedAt: string;
 };
 
+export type CurrentUserSummary = Pick<
+  LiveProfile,
+  "id" | "username" | "fullName" | "program" | "academicYear" | "onboardingCompleted"
+>;
+
+export type DirectoryProfile = Pick<
+  LiveProfile,
+  | "id"
+  | "username"
+  | "fullName"
+  | "bio"
+  | "program"
+  | "academicYear"
+  | "interests"
+  | "skills"
+  | "availableForProjects"
+>;
+
 const profileSelect = `
   *,
   programs(id, name),
@@ -64,6 +82,43 @@ function mapProfile(row: ProfileQueryRow): LiveProfile {
     onboardingCompleted: row.onboarding_completed,
     updatedAt: row.updated_at,
   };
+}
+
+export function summarizeProfile(profile: LiveProfile): CurrentUserSummary {
+  return {
+    id: profile.id,
+    username: profile.username,
+    fullName: profile.fullName,
+    program: profile.program,
+    academicYear: profile.academicYear,
+    onboardingCompleted: profile.onboardingCompleted,
+  };
+}
+
+type CurrentUserSummaryRow = Pick<
+  ProfileRow,
+  "id" | "username" | "full_name" | "academic_year" | "onboarding_completed"
+> & {
+  programs: { name: string } | null;
+};
+
+export async function getCurrentUserSummary(client: Client, id: string) {
+  const { data, error } = await client
+    .from("profiles")
+    .select("id, username, full_name, academic_year, onboarding_completed, programs(name)")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const row = data as CurrentUserSummaryRow;
+  return {
+    id: row.id,
+    username: row.username,
+    fullName: row.full_name,
+    program: row.programs?.name ?? "Program not selected",
+    academicYear: row.academic_year,
+    onboardingCompleted: row.onboarding_completed,
+  } satisfies CurrentUserSummary;
 }
 
 export async function getProfileReferences(
@@ -120,13 +175,38 @@ export async function getProfileByUsername(
 export async function listCompletedProfiles(client: Client) {
   const { data, error } = await client
     .from("profiles")
-    .select(profileSelect)
+    .select(`
+      id, username, full_name, bio, academic_year, available_for_projects,
+      programs(name),
+      profile_interests(interests(id, name)),
+      profile_skills(skills(id, name))
+    `)
     .eq("onboarding_completed", true)
     .eq("profile_visibility", "campus")
     .order("full_name")
     .limit(200);
   if (error) throw error;
-  return (data as ProfileQueryRow[]).map(mapProfile);
+  return (data as unknown as Array<{
+    id: string;
+    username: string;
+    full_name: string;
+    bio: string;
+    academic_year: number;
+    available_for_projects: boolean;
+    programs: { name: string } | null;
+    profile_interests: Array<{ interests: ReferenceItem | null }>;
+    profile_skills: Array<{ skills: ReferenceItem | null }>;
+  }>).map((row) => ({
+    id: row.id,
+    username: row.username,
+    fullName: row.full_name,
+    bio: row.bio,
+    program: row.programs?.name ?? "Program not selected",
+    academicYear: row.academic_year,
+    interests: row.profile_interests.flatMap((item) => item.interests ? [item.interests] : []),
+    skills: row.profile_skills.flatMap((item) => item.skills ? [item.skills] : []),
+    availableForProjects: row.available_for_projects,
+  } satisfies DirectoryProfile));
 }
 
 export type ProfileMutationInput = {

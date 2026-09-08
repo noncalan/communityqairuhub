@@ -1,11 +1,11 @@
 "use client";
 
 import { createContext, useContext, useMemo, useState } from "react";
-import type { LiveProfile } from "@/lib/data/profiles";
+import type { CurrentUserSummary } from "@/lib/data/profiles";
 
 type CurrentUserValue = {
-  profile: LiveProfile;
-  setProfile: (profile: LiveProfile) => void;
+  profile: CurrentUserSummary;
+  setProfile: (profile: CurrentUserSummary) => void;
 };
 
 const CurrentUserContext = createContext<CurrentUserValue | null>(null);
@@ -14,7 +14,7 @@ export function CurrentUserProvider({
   initialProfile,
   children,
 }: {
-  initialProfile: LiveProfile;
+  initialProfile: CurrentUserSummary;
   children: React.ReactNode;
 }) {
   const [profile, setProfile] = useState(initialProfile);

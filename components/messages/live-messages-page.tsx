@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowLeft, Paperclip, Search, Send } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -58,24 +57,19 @@ export function LiveMessagesPage({
   currentUserId,
   initialConversations,
   initialActiveConversationId,
-  initialMessages,
-  initialHasMore,
 }: {
   currentUserId: string;
   initialConversations: LiveConversation[];
   initialActiveConversationId: string | null;
-  initialMessages: LiveMessage[];
-  initialHasMore: boolean;
 }) {
-  const router = useRouter();
   const { messageRevision, refreshCounts } = useLiveActivity();
   const [conversations, setConversations] = useState(() => orderConversations(initialConversations));
   const [activeConversationId, setActiveConversationId] = useState(initialActiveConversationId);
-  const [messages, setMessages] = useState(initialMessages);
-  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [messages, setMessages] = useState<LiveMessage[]>([]);
+  const [hasMore, setHasMore] = useState(false);
   const [query, setQuery] = useState("");
   const [draft, setDraft] = useState("");
-  const [loadingConversation, setLoadingConversation] = useState(false);
+  const [loadingConversation, setLoadingConversation] = useState(Boolean(initialActiveConversationId));
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [sending, setSending] = useState(false);
   const requestId = useRef(0);
@@ -126,6 +120,7 @@ export function LiveMessagesPage({
 
   useEffect(() => {
     if (!activeConversationId) return;
+    const currentRequest = ++requestId.current;
     const supabase = createClient();
     const channel = supabase
       .channel(`conversation:${activeConversationId}`)
@@ -160,38 +155,31 @@ export function LiveMessagesPage({
           if (incoming.recipientId === currentUserId) void acknowledge(activeConversationId);
         },
       )
-      .subscribe((status) => {
-        if (status !== "SUBSCRIBED") return;
-        void listMessages(supabase, activeConversationId).then((page) => {
-          setMessages((items) => mergeMessages(items, page.items));
-          void acknowledge(activeConversationId);
-        }).catch(() => toast.error("Could not reconcile this conversation."));
+      .subscribe();
+    void listMessages(supabase, activeConversationId)
+      .then((page) => {
+        if (requestId.current !== currentRequest) return;
+        shouldScroll.current = true;
+        setMessages((items) => mergeMessages(items, page.items));
+        setHasMore(page.hasMore);
+        void acknowledge(activeConversationId);
+      })
+      .catch(() => toast.error("Could not load this conversation."))
+      .finally(() => {
+        if (requestId.current === currentRequest) setLoadingConversation(false);
       });
     return () => {
       void supabase.removeChannel(channel);
     };
   }, [acknowledge, activeConversationId, currentUserId]);
 
-  async function selectConversation(conversationId: string) {
+  function selectConversation(conversationId: string) {
     if (conversationId === activeConversationId) return;
-    const currentRequest = ++requestId.current;
     setActiveConversationId(conversationId);
     setMessages([]);
     setHasMore(false);
     setLoadingConversation(true);
-    router.replace(`/messages?conversation=${conversationId}`, { scroll: false });
-    try {
-      const page = await listMessages(createClient(), conversationId);
-      if (requestId.current !== currentRequest) return;
-      shouldScroll.current = true;
-      setMessages(page.items);
-      setHasMore(page.hasMore);
-      await acknowledge(conversationId);
-    } catch {
-      toast.error("Could not load this conversation.");
-    } finally {
-      if (requestId.current === currentRequest) setLoadingConversation(false);
-    }
+    window.history.replaceState(null, "", `/messages?conversation=${conversationId}`);
   }
 
   async function loadOlder() {
@@ -271,7 +259,7 @@ export function LiveMessagesPage({
             <button
               key={conversation.id}
               type="button"
-              onClick={() => void selectConversation(conversation.id)}
+              onClick={() => selectConversation(conversation.id)}
               className={`flex w-full items-center gap-3 border-b p-3 text-start transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${activeConversationId === conversation.id ? "bg-accent" : ""}`}
               aria-current={activeConversationId === conversation.id ? "true" : undefined}
             >

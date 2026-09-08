@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { AvatarMark } from "@/components/shared/avatar-mark";
 import { MessageButton } from "@/components/messages/message-button";
 import { FollowButton } from "@/components/social/follow-button";
+import { ClientNavLink } from "@/components/shared/client-nav-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { LiveProfile } from "@/lib/data/profiles";
@@ -39,7 +39,7 @@ export function LiveProfilePage({
             </div>
             <div className="flex gap-2">
               {own ? (
-                <Button asChild><Link href="/settings?tab=profile">Edit profile</Link></Button>
+                <Button asChild><ClientNavLink href="/settings?tab=profile">Edit profile</ClientNavLink></Button>
               ) : (
                 <>
                   <FollowButton

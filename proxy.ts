@@ -126,6 +126,9 @@ export async function proxy(request: NextRequest) {
   );
   const response = secureResponse(session.response, contentSecurityPolicy);
   response.headers.append("Server-Timing", formatServerTiming(authTiming));
+  session.authMetrics.forEach((metric) =>
+    response.headers.append("Server-Timing", formatServerTiming(metric)),
+  );
 
   if (!isLiveMode) return response;
 

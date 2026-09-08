@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Bookmark, Heart, MessageCircle, Plus, Send, Share2, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -12,6 +11,7 @@ import {
   setPostLikedAction,
 } from "@/app/actions/content";
 import { AvatarMark } from "@/components/shared/avatar-mark";
+import { ClientNavLink } from "@/components/shared/client-nav-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -257,14 +257,14 @@ function LivePostCard({ initialPost, currentUserId }: { initialPost: LivePost; c
   }
 
   const context = initialPost.community
-    ? <Link href={`/communities/${initialPost.community.slug}`} className="hover:text-foreground">{initialPost.community.name}</Link>
+    ? <ClientNavLink href={`/communities/${initialPost.community.slug}`} className="hover:text-foreground">{initialPost.community.name}</ClientNavLink>
     : "QAIRU campus";
 
   return (
     <article id={initialPost.id} className="p-5 sm:p-6">
       <div className="flex w-fit items-start gap-3">
         <AvatarMark initials={initials(initialPost.author.fullName)} color="#5367cb" className="size-9" />
-        <div><Link href={`/u/${initialPost.author.username}`} className="text-sm font-semibold hover:text-primary">{initialPost.author.fullName}</Link><p className="text-[11px] text-muted-foreground">{context} · <time dateTime={initialPost.createdAt}>{formattedDate(initialPost.createdAt)}</time></p></div>
+        <div><ClientNavLink href={`/u/${initialPost.author.username}`} className="text-sm font-semibold hover:text-primary">{initialPost.author.fullName}</ClientNavLink><p className="text-[11px] text-muted-foreground">{context} · <time dateTime={initialPost.createdAt}>{formattedDate(initialPost.createdAt)}</time></p></div>
       </div>
       <p className="mt-4 max-w-2xl whitespace-pre-wrap text-sm leading-6">{initialPost.content}</p>
       {!!initialPost.tags.length && <div className="mt-3 flex flex-wrap gap-1.5">{initialPost.tags.map((tag) => <Badge key={tag} variant="secondary" className="font-normal">{tag}</Badge>)}</div>}
@@ -280,7 +280,7 @@ function LivePostCard({ initialPost, currentUserId }: { initialPost: LivePost; c
           <div className="max-h-72 space-y-3 overflow-y-auto">
             {comments === null && !commentsError && <div className="space-y-3">{[1, 2].map((item) => <Skeleton key={item} className="h-20 rounded-lg" />)}</div>}
             {commentsError && <div className="rounded-lg border border-destructive/30 p-4 text-sm text-destructive"><p>{commentsError}</p><Button size="sm" variant="outline" className="mt-3" onClick={() => { setComments(null); void loadComments(); }}>Try again</Button></div>}
-            {comments?.map((comment) => <div key={comment.id} className="rounded-lg bg-muted p-3"><div className="flex items-start gap-3"><Link href={`/u/${comment.author.username}`} className="min-w-0 flex-1"><p className="truncate text-xs font-semibold">{comment.author.fullName}</p><p className="mt-1 whitespace-pre-wrap text-sm">{comment.body}</p><time dateTime={comment.createdAt} className="mt-1 block text-[10px] text-muted-foreground">{formattedDate(comment.createdAt)}</time></Link>{comment.author.id === currentUserId && <Button type="button" size="icon-sm" variant="ghost" onClick={() => removeComment(comment)} disabled={deletingCommentId === comment.id} aria-label="Delete comment"><Trash2 className="size-3.5" /></Button>}</div></div>)}
+            {comments?.map((comment) => <div key={comment.id} className="rounded-lg bg-muted p-3"><div className="flex items-start gap-3"><ClientNavLink href={`/u/${comment.author.username}`} className="min-w-0 flex-1"><p className="truncate text-xs font-semibold">{comment.author.fullName}</p><p className="mt-1 whitespace-pre-wrap text-sm">{comment.body}</p><time dateTime={comment.createdAt} className="mt-1 block text-[10px] text-muted-foreground">{formattedDate(comment.createdAt)}</time></ClientNavLink>{comment.author.id === currentUserId && <Button type="button" size="icon-sm" variant="ghost" onClick={() => removeComment(comment)} disabled={deletingCommentId === comment.id} aria-label="Delete comment"><Trash2 className="size-3.5" /></Button>}</div></div>)}
             {comments?.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">No comments yet.</p>}
           </div>
           <form onSubmit={submitComment} className="flex gap-2"><Input name="comment" required maxLength={2000} placeholder="Add a constructive comment…" autoComplete="off" disabled={commentPending} /><DialogFooter><Button type="submit" disabled={commentPending}>{commentPending ? "Adding…" : "Comment"}</Button></DialogFooter></form>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { updateProfileAction } from "@/app/actions/profile";
@@ -13,14 +12,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentUser } from "@/lib/auth/current-user-provider";
 import { normalizeUsername } from "@/lib/data/profile-validation";
-import type { ProfileReferences } from "@/lib/data/profiles";
+import {
+  summarizeProfile,
+  type LiveProfile,
+  type ProfileReferences,
+} from "@/lib/data/profiles";
 
-export function LiveSettingsPage({ references }: { references: ProfileReferences }) {
-  const router = useRouter();
+export function LiveSettingsPage({
+  initialProfile,
+  references,
+}: {
+  initialProfile: LiveProfile;
+  references: ProfileReferences;
+}) {
   const { theme, setTheme } = useTheme();
-  const { profile: currentProfile, setProfile: setCurrentProfile } = useCurrentUser();
+  const { setProfile: setCurrentProfile } = useCurrentUser();
   const [pending, startTransition] = useTransition();
-  const [profile, setProfile] = useState(currentProfile);
+  const [profile, setProfile] = useState(initialProfile);
 
   function toggleId(id: string, values: Array<{ id: string; name: string }>, source: Array<{ id: string; name: string }>) {
     return values.some((item) => item.id === id)
@@ -48,9 +56,8 @@ export function LiveSettingsPage({ references }: { references: ProfileReferences
         return;
       }
       setProfile(result.profile);
-      setCurrentProfile(result.profile);
+      setCurrentProfile(summarizeProfile(result.profile));
       toast.success("Profile updated across QAIRU Hub.");
-      router.refresh();
     });
   }
 

@@ -3,7 +3,11 @@ import "server-only";
 import { cache } from "react";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { getProfileById, getProfileGate } from "@/lib/data/profiles";
+import {
+  getCurrentUserSummary as getCurrentUserSummaryById,
+  getProfileById,
+  getProfileGate,
+} from "@/lib/data/profiles";
 import { withServerTiming } from "@/lib/observability/server-timing";
 import {
   VERIFIED_USER_EMAIL_HEADER,
@@ -61,6 +65,23 @@ export const getCurrentProfileGate = cache(async function getCurrentProfileGate(
     profileGate,
     onboardingCompleted: profileGate?.onboarding_completed === true,
   };
+});
+
+export const getCurrentUserSummary = cache(async function getCurrentUserSummary() {
+  return withServerTiming(
+    "current-user-summary",
+    async () => {
+      const current = await getCurrentAuth();
+      if (!current.userId) return { ...current, profile: null };
+      const profile = await withServerTiming(
+        "current-user-summary-profile",
+        () => getCurrentUserSummaryById(current.supabase, current.userId!),
+        { loader: "getCurrentUserSummary" },
+      );
+      return { ...current, profile };
+    },
+    { loader: "getCurrentUserSummary" },
+  );
 });
 
 export const getCurrentUser = cache(async function getCurrentUser() {

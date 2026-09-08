@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AvatarMark } from "@/components/shared/avatar-mark";
@@ -10,19 +10,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentUser } from "@/lib/auth/current-user-provider";
-import type { LiveProfile } from "@/lib/data/profiles";
-import type { FollowSnapshot } from "@/lib/data/social";
+import type { DirectoryProfile } from "@/lib/data/profiles";
+import { getFollowSnapshot, type FollowSnapshot } from "@/lib/data/social";
+import { createClient } from "@/lib/supabase/client";
 
 function initials(name: string) {
   return name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 }
 
-export function LivePeopleDirectory({ profiles, follows }: { profiles: LiveProfile[]; follows: FollowSnapshot }) {
+export function LivePeopleDirectory({ profiles }: { profiles: DirectoryProfile[] }) {
   const [query, setQuery] = useState("");
   const [program, setProgram] = useState("All");
   const [skill, setSkill] = useState("All");
   const [interest, setInterest] = useState("All");
   const deferred = useDeferredValue(query.trim().toLowerCase());
+  const { profile: currentProfile } = useCurrentUser();
+  const [follows, setFollows] = useState<FollowSnapshot | null>(null);
   const programs = [...new Set(profiles.map((profile) => profile.program))];
   const skills = [...new Set(profiles.flatMap((profile) => profile.skills.map((item) => item.name)))];
   const interests = [...new Set(profiles.flatMap((profile) => profile.interests.map((item) => item.name)))];
@@ -46,6 +49,22 @@ export function LivePeopleDirectory({ profiles, follows }: { profiles: LiveProfi
       }),
     [deferred, interest, profiles, program, skill],
   );
+
+  useEffect(() => {
+    let active = true;
+    void getFollowSnapshot(
+      createClient(),
+      currentProfile.id,
+      profiles.map((profile) => profile.id),
+    ).then((snapshot) => {
+      if (active) setFollows(snapshot);
+    }).catch(() => {
+      // The directory remains usable if non-critical social counts cannot load.
+    });
+    return () => {
+      active = false;
+    };
+  }, [currentProfile.id, profiles]);
 
   if (!profiles.length) {
     return (
@@ -101,7 +120,7 @@ function Filter({ label, value, setValue, options }: { label: string; value: str
   );
 }
 
-function LiveStudentCard({ profile, follows }: { profile: LiveProfile; follows: FollowSnapshot }) {
+function LiveStudentCard({ profile, follows }: { profile: DirectoryProfile; follows: FollowSnapshot | null }) {
   const router = useRouter();
   const { profile: currentProfile } = useCurrentUser();
   const own = currentProfile.id === profile.id;
@@ -123,12 +142,14 @@ function LiveStudentCard({ profile, follows }: { profile: LiveProfile; follows: 
               <Button size="sm" variant="outline" onClick={() => router.push("/settings?tab=profile")}>Edit profile</Button>
             ) : (
               <>
-                <FollowButton
-                  profileId={profile.id}
-                  username={profile.username}
-                  initialFollowing={follows.followingIds.includes(profile.id)}
-                  initialFollowerCount={follows.followerCounts[profile.id] ?? 0}
-                />
+                {follows ? (
+                  <FollowButton
+                    profileId={profile.id}
+                    username={profile.username}
+                    initialFollowing={follows.followingIds.includes(profile.id)}
+                    initialFollowerCount={follows.followerCounts[profile.id] ?? 0}
+                  />
+                ) : <Button size="sm" disabled>Loading…</Button>}
                 <MessageButton targetProfileId={profile.id} />
               </>
             )}

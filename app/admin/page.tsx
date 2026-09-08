@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { Construction } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
-import { Brand } from "@/components/shared/brand";
+import { ClientBrand } from "@/components/shared/client-brand";
+import { ClientNavLink } from "@/components/shared/client-nav-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getCurrentProfileGate } from "@/lib/auth/current-user";
@@ -26,14 +26,14 @@ export default async function Page() {
   return (
     <div className="min-h-screen bg-[#0d1017] text-slate-100">
       <header className="flex h-16 items-center border-b border-white/10 px-6">
-        <Brand />
+        <ClientBrand />
         <Badge className="ms-3 bg-white/10 text-slate-300">Admin</Badge>
-        <Link
+        <ClientNavLink
           href="/home"
           className="ms-auto text-xs text-slate-400 hover:text-white"
         >
           Return to Hub
-        </Link>
+        </ClientNavLink>
       </header>
       <main className="mx-auto flex max-w-3xl flex-col items-center px-5 py-24 text-center">
         <span className="grid size-12 place-items-center rounded-full bg-white/5 text-slate-400">
@@ -51,7 +51,7 @@ export default async function Page() {
           metrics or queue items are presented as real data.
         </p>
         <Button asChild variant="outline" className="mt-8">
-          <Link href="/home">Back to Hub</Link>
+          <ClientNavLink href="/home">Back to Hub</ClientNavLink>
         </Button>
       </main>
     </div>

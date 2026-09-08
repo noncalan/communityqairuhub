@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { UserCheck, UserPlus } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { toggleFollowAction } from "@/app/actions/social";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,6 @@ export function FollowButton({
   initialFollowerCount: number;
   showCount?: boolean;
 }) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [following, setFollowing] = useState(initialFollowing);
   const [followerCount, setFollowerCount] = useState(initialFollowerCount);
@@ -42,7 +40,6 @@ export function FollowButton({
         return;
       }
       toast.success(next ? "Now following" : "Unfollowed");
-      router.refresh();
     });
   }
 

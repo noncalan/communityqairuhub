@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { ArrowLeft, Bot, ExternalLink, Mail, Pencil, Send, ShieldCheck, UserRound } from "lucide-react";
 import { ClubLogo } from "@/components/clubs/club-logo";
+import { ClientNavLink } from "@/components/shared/client-nav-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { PublicClub } from "@/lib/clubs/data";
@@ -16,9 +16,9 @@ export function ClubDetail({
 }) {
   return (
     <div className="page-container">
-      <Link href="/clubs" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+      <ClientNavLink href="/clubs" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-4" /> Club directory
-      </Link>
+      </ClientNavLink>
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_340px]">
         <main>
           <div className="flex flex-col gap-6 border-b pb-8 sm:flex-row sm:items-start">
@@ -47,7 +47,7 @@ export function ClubDetail({
         <aside className="space-y-4">
           {canManage && (
             <Button variant="outline" className="w-full" asChild>
-              <Link href={`/clubs/${club.slug}/edit`}><Pencil className="size-4" /> Edit club</Link>
+              <ClientNavLink href={`/clubs/${club.slug}/edit`}><Pencil className="size-4" /> Edit club</ClientNavLink>
             </Button>
           )}
           <div className="surface rounded-xl p-5">
