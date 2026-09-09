@@ -1,3 +1,4 @@
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
@@ -5,6 +6,7 @@ import { Providers } from "@/components/providers";
 import { getTrustedSiteOrigin } from "@/lib/security/site-origin";
 import "sonner/dist/styles.css";
 import "./globals.css";
+
 
 // A fresh CSP nonce is forwarded by proxy.ts on every request. Nonces can only
 // be attached to framework scripts during dynamic rendering.
@@ -47,6 +49,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full">
+        <SpeedInsights />
         <Providers nonce={nonce}>{children}</Providers>
       </body>
     </html>
