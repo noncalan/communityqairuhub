@@ -196,4 +196,3 @@ insert into public.skills (name) values
   ('Video'),
   ('Writing')
 on conflict (name) do nothing;
-
