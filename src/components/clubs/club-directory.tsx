@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, Bot, Search, Send } from "lucide-react";
+import { ArrowUpRight, Bot, Plus, Search, Send, Users } from "lucide-react";
 import { useDeferredValue, useMemo, useState } from "react";
 import { ClubLogo } from "@/components/clubs/club-logo";
 import { ClientNavLink } from "@/components/shared/client-nav-link";
@@ -13,9 +13,11 @@ import { buildClubBotDeepLink } from "@/lib/telegram/validation";
 export function ClubDirectory({
   clubs,
   botUsername,
+  canCreate,
 }: {
   clubs: PublicClub[];
   botUsername: string | null;
+  canCreate: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
@@ -35,6 +37,7 @@ export function ClubDirectory({
     }),
     [category, clubs, deferredQuery],
   );
+  const hasActiveFilters = Boolean(deferredQuery) || category !== "All";
 
   return (
     <>
@@ -116,7 +119,7 @@ export function ClubDirectory({
             );
           })}
         </div>
-      ) : (
+      ) : hasActiveFilters ? (
         <div className="surface rounded-xl px-6 py-20 text-center">
           <Search className="mx-auto size-5 text-muted-foreground" />
           <h2 className="mt-4 font-semibold">No clubs match these filters</h2>
@@ -128,6 +131,24 @@ export function ClubDirectory({
           >
             Clear filters
           </Button>
+        </div>
+      ) : (
+        <div className="surface rounded-xl px-6 py-20 text-center">
+          <Users className="mx-auto size-5 text-muted-foreground" />
+          <h2 className="mt-4 font-semibold">No clubs yet</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {canCreate
+              ? "Create the first student club when you are ready."
+              : "Student clubs will appear here once organizers publish them."}
+          </p>
+          {canCreate && (
+            <Button className="mt-5" asChild>
+              <ClientNavLink href="/clubs/new">
+                <Plus className="size-4" />
+                Create club
+              </ClientNavLink>
+            </Button>
+          )}
         </div>
       )}
     </>
