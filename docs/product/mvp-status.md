@@ -1,5 +1,7 @@
 # QAIRU Hub — MVP status
 
+> **Historical snapshot (2026-09-07).** This audit predates the current `/find` implementation and the `complete_my_onboarding` RPC. Use [Implemented features](../implemented-features.md) for current status.
+
 Дата аудита: 2026-09-07  
 Источник требований: `community-product-spec.md`, разделы 6, 7.1 и 7.2.  
 Источник истины по реализации: routes, components, actions, data layer и Supabase migrations; README в оценку не засчитывался.

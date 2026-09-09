@@ -91,6 +91,8 @@ Create fields:
 - Optional: `bio`, `avatar_url`, `program_id`, `available_for_projects`, `open_to_collaboration`, `profile_visibility`, `onboarding_completed`
 - Editable with `PATCH`: every optional/create field except `id`
 
+The newer profile fields `academic_direction`, `desired_role`, and `contribution_preferences` can appear in read responses, but the current Core API validator does not accept them on `POST` or `PATCH`. The interactive onboarding flow writes those fields through `complete_my_onboarding`.
+
 Create request:
 
 ```json

@@ -34,7 +34,7 @@ The website and bot never synchronize separate copies. Website create/edit actio
 
 ## Database
 
-Migration: `supabase/migrations/20260904154222_university_clubs_telegram_prototype.sql`
+Migration: `supabase/migrations/20260904170420_university_clubs_telegram_prototype.sql`
 
 ### Reused table: `public.communities`
 
@@ -155,10 +155,10 @@ npm install
 npx supabase start
 npx supabase db reset
 npx supabase status
-npm run dev
+npm run dev -- -p 3010
 ```
 
-Copy the local API URL and publishable/anon key reported by `supabase status` into `.env.local`. Use a site URL matching the development port (the default command above is `http://localhost:3000`). Set `NEXT_PUBLIC_APP_MODE=live` to exercise existing authentication and organizer flows.
+Copy the local API URL and publishable/anon key reported by `supabase status` into `.env.local`. Use a site URL matching the development port (`http://localhost:3010` for the command above). `supabase/config.toml` still contains Auth URLs on port `3000`, so align those values before testing redirects. Set `NEXT_PUBLIC_APP_MODE=live` to exercise existing authentication and organizer flows.
 
 Localhost cannot receive Telegram webhooks directly. Use a trusted HTTPS tunnel for a temporary bot test or deploy this branch to an isolated Vercel Preview. Never point a test webhook at Production unless that change is intentional.
 

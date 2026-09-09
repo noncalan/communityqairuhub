@@ -1,118 +1,123 @@
 # QAIRU HUB
 
-QAIRU HUB — платформа сообщества студентов QAIRU: профили, сообщества, проекты, события, публикации, ресурсы, личные сообщения, уведомления и каталог университетских клубов с интеграцией Telegram.
+QAIRU HUB is a university community platform built with Next.js and Supabase. The current repository is a controlled-preview implementation: core authenticated campus flows are present, while several product areas remain prototypes or partial experiences.
 
-Целевой адрес продукта: [community.qairuhub.com](https://community.qairuhub.com).
+The source of truth for current behavior is the executable code, Supabase migrations, and tests. Start with the [current system overview](docs/current-system-overview.md) and [known limitations](docs/known-limitations.md).
 
-## Текущий статус
+## Current capabilities
 
-Проект находится на стадии **MVP / закрытого beta-preview**. В репозитории есть два режима:
+- Supabase authentication, email verification, password reset, and protected routes
+- Required onboarding and editable user profiles
+- People discovery, follows, communities, projects, applications, events, resources, and conversations
+- Public student-club directory plus authenticated club creation and management
+- In-app notifications and a Telegram club deep-link/webhook prototype
+- A privileged server-to-server Core API for selected resources
 
-- `live` — рабочие сценарии на Supabase Auth, PostgreSQL, RLS и Realtime;
-- `demo` — интерактивная демонстрация на mock-данных и `localStorage`.
+See the [feature inventory](docs/implemented-features.md) for exact implementation status. A listed domain does not imply that every workflow in that domain is complete.
 
-По аудиту от 7 сентября 2026 года продуктовый MVP реализован примерно на **43%**. Базовые профили, сообщества, проекты, события, контент, сообщения и уведомления работают в live-режиме, но публичный запуск пока блокируют проверка статуса студента, модерация и жалобы, `/help`, завершение activation-flow и эксплуатационные проверки. Подробная матрица: [docs/product/mvp-status.md](docs/product/mvp-status.md).
+## Technology stack
 
-Каталог клубов и Telegram-интеграция — отдельный **прототип**, а `Opportunities` и `/admin` пока не являются завершёнными live-функциями.
+- Next.js 16.3 App Router and React 19
+- TypeScript and Tailwind CSS
+- Supabase Auth, Postgres, Row Level Security, Realtime, and RPC functions
+- Node's built-in test runner for application tests and pgTAP for database tests
+- Vercel deployment with Speed Insights
 
-## Что входит в MVP
+## Runtime modes
 
-- регистрация, подтверждение пользователя и безопасный доступ;
-- onboarding и профиль студента;
-- поиск людей и команд, проекты, роли и заявки;
-- события и связанный цикл уведомлений;
-- автоматическая лента активности;
-- жалобы, модерация и пользовательская страница помощи.
+`NEXT_PUBLIC_APP_MODE=live` enables Supabase-backed application flows. Any other value selects the demo experience, where much of the hub uses mock data and browser storage. The student-club directory is an important exception: it uses the configured public Supabase client in both modes.
 
-Сообщения, ресурсы, свободные публикации и клубы уже реализованы частично или полностью, но по текущему продуктовому документу относятся к v1 либо к отдельному прототипу. Это не повод удалять их из кода.
+## Local setup
 
-## Структура репозитория
+Requirements:
 
-```text
-.
-├── src/                    основной код Next.js
-│   ├── app/                страницы, layouts, Server Actions и HTTP API
-│   ├── components/         frontend-компоненты и UI primitives
-│   ├── lib/                auth, data access, Supabase, Telegram, security
-│   ├── types/              общие и сгенерированные TypeScript-типы
-│   └── proxy.ts            сессии, route gates и CSP
-├── supabase/               backend-схема, миграции, seed и SQL-тесты
-├── docs/                   продуктовая, архитектурная и операционная документация
-├── public/                 используемые публичные статические материалы
-├── scripts/                служебные и проверочные скрипты
-├── archive/                сохранённые, но неиспользуемые материалы
-└── *.config.*, *.json      конфигурация инструментов и платформы
-```
+- Node.js 24.x, matching `package.json`
+- npm
+- Docker and the Supabase CLI when running the local database stack or pgTAP tests
 
-Быстрые ориентиры:
-
-- frontend: [`src/components/`](src/components/) и страницы в [`src/app/`](src/app/);
-- backend приложения: [`src/app/api/`](src/app/api/), [`src/app/actions/`](src/app/actions/) и [`src/lib/`](src/lib/);
-- база данных и права доступа: [`supabase/`](supabase/);
-- дизайн-система и материалы: [`docs/design/`](docs/design/), [`src/app/globals.css`](src/app/globals.css), [`src/components/ui/`](src/components/ui/) и [`public/`](public/);
-- документация: [`docs/README.md`](docs/README.md);
-- архив: [`archive/README.md`](archive/README.md).
-
-## Быстрый запуск
-
-Требования: Node.js **24.x**, npm. Для live-режима также нужны Docker Desktop и Supabase CLI.
-
-### Demo-режим
+Install dependencies and start the demo-mode application:
 
 ```bash
 npm ci
-npm run dev
+npm run dev -- -p 3010
 ```
 
-Откройте <http://localhost:3000>. Если `NEXT_PUBLIC_APP_MODE` не равен `live`, приложение использует demo-режим. Маршруты `/clubs` — исключение: они всегда читают реальные данные Supabase.
+Copy `.env.example` to `.env.local` and set only the values required for the mode being tested. Never commit secrets.
 
-### Live-режим с локальным Supabase
+For a local live-mode Supabase stack:
 
 ```bash
 npx supabase start
 npx supabase db reset
-npx supabase status
-```
-
-Скопируйте `.env.example` в `.env.local`, укажите значения из `supabase status` и установите `NEXT_PUBLIC_APP_MODE=live`. Затем запустите:
-
-```bash
 npm run dev -- -p 3010
 ```
 
-Важно: origin в `NEXT_PUBLIC_SITE_URL`, `supabase/config.toml` и адрес в браузере должны совпадать. Сейчас пример окружения использует `localhost:3010`, а локальная конфигурация Supabase — `127.0.0.1:3000`; перед тестированием Auth их нужно выровнять.
+The repository currently contains an origin mismatch that must be resolved for a smooth local Auth flow: `.env.example` and the app use port `3010`, while `supabase/config.toml` still declares port `3000` Auth URLs. See [known limitations](docs/known-limitations.md).
 
-Полный список переменных находится в [`.env.example`](.env.example). Секретные ключи нельзя добавлять в `NEXT_PUBLIC_*` или коммитить.
+## Environment variables
 
-## Основные команды
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Browser/server Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Public Supabase key used by browser and SSR clients |
+| `NEXT_PUBLIC_SITE_URL` | Canonical application origin used in redirects |
+| `NEXT_PUBLIC_APP_MODE` | `live` for production data flows; other values select demo behavior |
+| `CORE_API_KEY` | Long bearer token for the privileged Core API |
+| `SUPABASE_SECRET_KEY` | Preferred server-only privileged Supabase key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supported legacy privileged-key fallback |
+| `TELEGRAM_BOT_TOKEN` | Server-only Telegram Bot API token |
+| `TELEGRAM_BOT_USERNAME` | Public bot username used to construct club deep links |
+| `TELEGRAM_WEBHOOK_SECRET` | Secret verified on incoming Telegram webhook requests |
+
+The complete behavior and safety requirements are documented in [deployment](docs/deployment.md) and [authentication and security](docs/authentication-and-security.md).
+
+## Development commands
 
 ```bash
-npm run dev          # локальная разработка
-npm test             # unit/security/prototype/Core API tests
-npm run typecheck    # TypeScript
-npm run lint         # ESLint
-npm run build        # production build
+npm run dev
+npm test
+npm run lint
+npm run typecheck
+npm run build
 ```
 
-SQL-регрессии находятся в `supabase/tests/database/` и запускаются только против локального или явно выбранного development-проекта.
+Run database tests against the local Supabase stack with:
 
-## Технологии
+```bash
+npx supabase test db --local supabase/tests/database
+```
 
-- Node.js 24, Next.js 16.3 App Router, React 19.2, TypeScript 5;
-- Tailwind CSS 4, shadcn configuration, Radix UI, Lucide, Sonner;
-- Supabase Auth, PostgreSQL, Data API, RLS и Realtime;
-- Telegram Bot API через Next.js Route Handler;
-- Vercel, ESLint, Node.js test runner и pgTAP.
+See [testing and quality](docs/testing-and-quality.md) for test scope and current limitations.
 
-Точные версии зафиксированы в `package.json` и `package-lock.json`.
+## Project structure
 
-## Перед началом работы
+```text
+src/app/             App Router pages, layouts, server actions, and API handlers
+src/components/      Shared shell, navigation, forms, and feature components
+src/lib/             Supabase clients, queries, validation, utilities, and colocated Node tests
+src/types/           Shared TypeScript types
+supabase/migrations/ Forward-only database migration history
+supabase/tests/      pgTAP database and RLS tests
+docs/                Current implementation documentation and historical notes
+```
 
-1. Прочитайте [`src/README.md`](src/README.md), затем профильный документ из [`docs/README.md`](docs/README.md).
-2. Не смешивайте demo- и live-реализации: режим выбирается через `src/lib/app-mode.ts`.
-3. Не полагайтесь на `src/proxy.ts` как на единственную проверку доступа. Server Actions и Route Handlers обязаны проверять авторизацию самостоятельно.
-4. Миграции Supabase являются последовательной историей и не переписываются после применения.
-5. Core API предназначен только для server-to-server вызовов: [docs/reference/core-api.md](docs/reference/core-api.md).
-6. Ограничения запуска и security-gates описаны в [`SECURITY.md`](SECURITY.md).
+## Documentation
 
-Локальные `.env.local`, `.next/`, `.vercel/`, `node_modules/`, `.cache/` и `.local/` не являются частью исходного кода и игнорируются Git.
+- [Current system overview](docs/current-system-overview.md)
+- [Implemented features](docs/implemented-features.md)
+- [Architecture](docs/architecture.md)
+- [Database and Supabase](docs/database-and-supabase.md)
+- [Authentication and security](docs/authentication-and-security.md)
+- [Routes and pages](docs/routes-and-pages.md)
+- [Testing and quality](docs/testing-and-quality.md)
+- [Deployment](docs/deployment.md)
+- [Known limitations](docs/known-limitations.md)
+- [Documentation index](docs/README.md)
+
+## Database change policy
+
+The reconciled September 4, 2026 migration chain in `supabase/migrations/` is the canonical baseline. Do not rename or rewrite applied migrations. Add all future schema changes as new, forward-only migrations and verify migration state before and after deployment.
+
+## Deployment overview
+
+`master` is the production branch. Vercel builds the Next.js application, and `vercel.json` selects the `syd1` function region. The repository contains no GitHub Actions workflow, so deployment gates and the exact GitHub-to-Vercel integration remain external configuration. Follow the [deployment checklist](docs/deployment.md) before promoting a release.
