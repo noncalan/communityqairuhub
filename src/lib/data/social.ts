@@ -41,7 +41,7 @@ export type LiveProject = {
   description: string;
   category: string;
   status: "idea" | "building" | "launched" | "completed";
-  creator: CompactProfile;
+  creator: CompactProfile | null;
   technologies: string[];
   roles: Array<{ id: string; title: string; isOpen: boolean }>;
   members: Array<{
@@ -327,7 +327,8 @@ type ProjectBaseRow = {
   description: string;
   category: string;
   status: "idea" | "building" | "launched" | "completed";
-  creator: ProfileRow;
+  creator_id: string;
+  creator: ProfileRow | null;
   project_technologies: Array<{ name: string }>;
   project_roles: Array<{ id: string; title: string; is_open: boolean }>;
   project_members: Array<{
@@ -350,7 +351,7 @@ type ApplicationRow = {
 };
 
 const projectListSelect = `
-  id, slug, name, tagline, description, category, status,
+  id, slug, name, tagline, description, category, status, creator_id,
   creator:profiles!projects_creator_id_fkey(${compactProfileSelect}),
   project_technologies(name),
   project_roles(id, title, is_open),
@@ -359,7 +360,7 @@ const projectListSelect = `
 `;
 
 const projectDetailSelect = `
-  id, slug, name, tagline, description, category, status,
+  id, slug, name, tagline, description, category, status, creator_id,
   creator:profiles!projects_creator_id_fkey(${compactProfileSelect}),
   project_technologies(name),
   project_roles(id, title, is_open),
@@ -382,7 +383,7 @@ function mapProjectBase(
     description: row.description,
     category: row.category,
     status: row.status,
-    creator: compactProfile(row.creator),
+    creator: row.creator ? compactProfile(row.creator) : null,
     technologies: row.project_technologies.map((item) => item.name),
     roles: row.project_roles.map((role) => ({
       id: role.id,
@@ -400,7 +401,7 @@ function mapProjectBase(
         : [],
     ),
     memberCount: row.project_members.length,
-    isCreator: row.creator.id === currentUserId,
+    isCreator: row.creator_id === currentUserId,
     isMember: row.project_members.some(
       (member) => member.profile_id === currentUserId,
     ),

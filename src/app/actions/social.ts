@@ -20,6 +20,7 @@ export type SocialActionResult<T = undefined> =
   | { ok: false; error: string };
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function text(value: string, min: number, max: number, label: string) {
   const normalized = value.trim();
@@ -32,6 +33,14 @@ function text(value: string, min: number, max: number, label: string) {
 function uuid(value: string, label: string) {
   if (!uuidPattern.test(value)) throw new Error(`${label} is invalid.`);
   return value;
+}
+
+function slug(value: string, label: string) {
+  const normalized = value.trim().toLowerCase();
+  if (normalized.length < 3 || normalized.length > 60 || !slugPattern.test(normalized)) {
+    throw new Error(`${label} is invalid.`);
+  }
+  return normalized;
 }
 
 function uniqueList(
@@ -172,12 +181,13 @@ export async function applyToProjectAction(input: {
 }): Promise<SocialActionResult> {
   try {
     const { supabase, userId } = await authenticated();
+    const projectSlug = slug(input.slug, "Project");
     await applyToProject(supabase, userId, {
       projectId: uuid(input.projectId, "Project"),
       projectRoleId: uuid(input.projectRoleId, "Role"),
       message: text(input.message, 5, 1000, "Message"),
     });
-    refresh("/projects", `/projects/${input.slug}`);
+    refresh("/find", "/projects", `/projects/${projectSlug}`);
     return { ok: true };
   } catch (error) {
     return { ok: false, error: databaseMessage(error) };
@@ -192,8 +202,9 @@ export async function reviewProjectApplicationAction(input: {
   try {
     const { supabase } = await authenticated();
     if (input.status !== "accepted" && input.status !== "rejected") throw new Error("Review decision is invalid.");
+    const projectSlug = slug(input.slug, "Project");
     await reviewProjectApplication(supabase, uuid(input.applicationId, "Application"), input.status);
-    refresh("/projects", `/projects/${input.slug}`);
+    refresh("/find", "/projects", `/projects/${projectSlug}`);
     return { ok: true };
   } catch (error) {
     return { ok: false, error: databaseMessage(error) };

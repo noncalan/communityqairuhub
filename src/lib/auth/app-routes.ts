@@ -3,6 +3,7 @@ const protectedRouteRoots = [
   "/api",
   "/communities",
   "/events",
+  "/find",
   "/home",
   "/messages",
   "/notifications",

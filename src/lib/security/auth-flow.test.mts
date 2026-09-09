@@ -67,6 +67,8 @@ describe("authErrorMessage", () => {
 describe("isProtectedAppPath", () => {
   it("protects hub and API routes, including dynamic children", () => {
     assert.equal(isProtectedAppPath("/home"), true);
+    assert.equal(isProtectedAppPath("/find"), true);
+    assert.equal(isProtectedAppPath("/find/people"), true);
     assert.equal(isProtectedAppPath("/projects/live-project"), true);
     assert.equal(isProtectedAppPath("/api/posts/id/comments"), true);
     assert.equal(isProtectedAppPath("/u/student"), true);

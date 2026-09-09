@@ -57,6 +57,7 @@ export type DirectoryProfile = Pick<
   | "interests"
   | "skills"
   | "availableForProjects"
+  | "openToCollaboration"
 >;
 
 const profileSelect = `
@@ -222,7 +223,7 @@ export async function listCompletedProfiles(client: Client) {
     .from("profiles")
     .select(`
       id, username, full_name, bio, academic_direction, academic_year,
-      available_for_projects,
+      available_for_projects, open_to_collaboration,
       programs(name),
       profile_interests(interests(id, name)),
       profile_skills(skills(id, name))
@@ -240,6 +241,7 @@ export async function listCompletedProfiles(client: Client) {
     academic_direction: string | null;
     academic_year: number;
     available_for_projects: boolean;
+    open_to_collaboration: boolean;
     programs: { name: string } | null;
     profile_interests: Array<{ interests: ReferenceItem | null }>;
     profile_skills: Array<{ skills: ReferenceItem | null }>;
@@ -256,6 +258,7 @@ export async function listCompletedProfiles(client: Client) {
     interests: row.profile_interests.flatMap((item) => item.interests ? [item.interests] : []),
     skills: row.profile_skills.flatMap((item) => item.skills ? [item.skills] : []),
     availableForProjects: row.available_for_projects,
+    openToCollaboration: row.open_to_collaboration,
   } satisfies DirectoryProfile));
 }
 
